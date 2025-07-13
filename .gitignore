@@ -1,0 +1,27 @@
+# Binaries
+ccfeedback
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test and coverage files
+*.test
+*.out
+coverage.html
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# Go build cache
+/vendor/
+/bin/
+
+# OS files
+.DS_Store
+Thumbs.db
