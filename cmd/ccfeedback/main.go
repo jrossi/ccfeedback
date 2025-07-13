@@ -47,11 +47,15 @@ func main() {
 	ctx := context.Background()
 
 	// Execute
-	if err := executor.Execute(ctx); err != nil {
+	exitCode, err := executor.ExecuteWithExitCode(ctx)
+	if err != nil {
 		if *debug {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		}
 		// Default to non-blocking error
 		os.Exit(1)
 	}
+
+	// Exit with the proper code
+	os.Exit(exitCode)
 }

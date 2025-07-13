@@ -28,38 +28,44 @@ func NewHandler(ruleEngine RuleEngine) *Handler {
 
 // ProcessInput reads hook message from stdin and processes it
 func (h *Handler) ProcessInput(ctx context.Context) error {
+	_, err := h.ProcessInputWithResponse(ctx)
+	return err
+}
+
+// ProcessInputWithResponse reads hook message from stdin, processes it, and returns the response
+func (h *Handler) ProcessInputWithResponse(ctx context.Context) (*HookResponse, error) {
 	// Read from stdin
 	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
-		return fmt.Errorf("failed to read stdin: %w", err)
+		return nil, fmt.Errorf("failed to read stdin: %w", err)
 	}
 
 	// Parse the message
 	msg, err := h.parser.ParseHookMessage(data)
 	if err != nil {
-		return fmt.Errorf("failed to parse hook message: %w", err)
+		return nil, fmt.Errorf("failed to parse hook message: %w", err)
 	}
 
 	// Process the message
 	response, err := h.ProcessMessage(ctx, msg)
 	if err != nil {
-		return fmt.Errorf("failed to process message: %w", err)
+		return nil, fmt.Errorf("failed to process message: %w", err)
 	}
 
 	// Write response if needed
 	if response != nil {
 		responseData, err := h.parser.MarshalHookResponse(response)
 		if err != nil {
-			return fmt.Errorf("failed to marshal response: %w", err)
+			return nil, fmt.Errorf("failed to marshal response: %w", err)
 		}
 
 		_, err = os.Stdout.Write(responseData)
 		if err != nil {
-			return fmt.Errorf("failed to write response: %w", err)
+			return nil, fmt.Errorf("failed to write response: %w", err)
 		}
 	}
 
-	return nil
+	return response, nil
 }
 
 // ProcessMessage handles a specific hook message

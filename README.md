@@ -44,10 +44,10 @@ import (
 func main() {
     // Create API with default rule engine
     api := ccfeedback.New()
-    
+
     // Or with a custom rule engine
     api := ccfeedback.NewWithRuleEngine(myRuleEngine)
-    
+
     // Process stdin (for use as a hook)
     ctx := context.Background()
     if err := api.ProcessStdin(ctx); err != nil {

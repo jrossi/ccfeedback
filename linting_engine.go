@@ -19,7 +19,7 @@ func NewLintingRuleEngine() *LintingRuleEngine {
 	return &LintingRuleEngine{
 		linters: []linters.Linter{
 			linters.NewGoLinter(),
-			// Add more linters here as they're implemented
+			linters.NewMarkdownLinter(),
 		},
 	}
 }
@@ -115,14 +115,8 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 		return nil, nil
 	}
 
-	// For now, we'll need to get the file path from the original input
-	// In a real implementation, we might need to track this state
-	// This is a limitation of the current message structure
-
-	// Since we can't easily get the file path from PostToolUse message,
-	// we'll return nil for now. In a production system, we'd need to
-	// either enhance the message structure or maintain state between
-	// pre and post hooks.
+	// PostToolUse messages don't contain ToolInput, only ToolOutput
+	// This is a limitation - we need PreToolUse hooks for file path access
 	return nil, nil
 }
 

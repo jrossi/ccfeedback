@@ -27,12 +27,28 @@ func NewExecutor(ruleEngine RuleEngine) *Executor {
 
 // Execute runs the hook processing with the configured handler
 func (e *Executor) Execute(ctx context.Context) error {
+	_, err := e.ExecuteWithExitCode(ctx)
+	return err
+}
+
+// ExecuteWithExitCode runs the hook processing and returns the appropriate exit code
+func (e *Executor) ExecuteWithExitCode(ctx context.Context) (int, error) {
 	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(ctx, e.timeout)
 	defer cancel()
 
-	// Process the input
-	return e.handler.ProcessInput(ctx)
+	// Process the input and get the response
+	response, err := e.handler.ProcessInputWithResponse(ctx)
+	if err != nil {
+		return 1, err
+	}
+
+	// Determine exit code based on response
+	if response != nil && response.Decision == "block" {
+		return int(ExitBlocking), nil
+	}
+
+	return int(ExitSuccess), nil
 }
 
 // ExecuteWithReader processes hook messages from a custom reader
