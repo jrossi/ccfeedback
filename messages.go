@@ -30,9 +30,10 @@ type PreToolUseMessage struct {
 // PostToolUseMessage is sent after a tool has been executed
 type PostToolUseMessage struct {
 	BaseHookMessage
-	ToolName   string      `json:"tool_name"`
-	ToolOutput interface{} `json:"tool_output,omitempty"`
-	ToolError  string      `json:"tool_error,omitempty"`
+	ToolName   string                 `json:"tool_name"`
+	ToolInput  map[string]interface{} `json:"tool_input"`
+	ToolOutput interface{}            `json:"tool_output,omitempty"`
+	ToolError  string                 `json:"tool_error,omitempty"`
 }
 
 // NotificationMessage is sent for system notifications

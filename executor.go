@@ -43,6 +43,12 @@ func (e *Executor) ExecuteWithExitCode(ctx context.Context) (int, error) {
 		return 1, err
 	}
 
+	// Check if this is a PostToolUse hook by examining the handler's last processed message
+	if e.handler.IsPostToolUseHook() {
+		// Always return success for PostToolUse hooks to provide feedback without blocking
+		return int(ExitSuccess), nil
+	}
+
 	// Determine exit code based on response
 	if response != nil && response.Decision == "block" {
 		return int(ExitBlocking), nil

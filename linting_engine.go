@@ -115,8 +115,58 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 		return nil, nil
 	}
 
-	// PostToolUse messages don't contain ToolInput, only ToolOutput
-	// This is a limitation - we need PreToolUse hooks for file path access
+	// Extract file path from tool input
+	filePath, ok := msg.ToolInput["file_path"].(string)
+	if !ok || filePath == "" {
+		return nil, nil
+	}
+
+	// Read the actual file from disk
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		// File might have been deleted or moved, that's ok
+		return nil, nil
+	}
+
+	// Check each linter
+	for _, linter := range e.linters {
+		if linter.CanHandle(filePath) {
+			result, err := linter.Lint(ctx, filePath, content)
+			if err != nil {
+				// Log error but don't block
+				fmt.Fprintf(os.Stderr, "\n> Linting error for %s: %v\n", filePath, err)
+				continue
+			}
+
+			// Check for issues and format detailed output
+			var errorIssues, warningIssues []linters.Issue
+			for _, issue := range result.Issues {
+				if issue.Severity == "error" {
+					errorIssues = append(errorIssues, issue)
+				} else {
+					warningIssues = append(warningIssues, issue)
+				}
+			}
+
+			// Always provide feedback via stderr
+			if len(errorIssues) > 0 {
+				output := e.formatLintOutput(filePath, errorIssues, true)
+				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
+			} else if len(warningIssues) > 0 {
+				output := e.formatLintOutput(filePath, warningIssues, false)
+				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
+			} else {
+				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: 👉 Style clean. Continue with your task.\n")
+			}
+
+			// Check for associated test files if it's a Go file
+			if strings.HasSuffix(filePath, ".go") && !strings.HasSuffix(filePath, "_test.go") {
+				e.checkTestFile(ctx, filePath)
+			}
+		}
+	}
+
+	// Always return nil to not interfere with Claude's operation
 	return nil, nil
 }
 
@@ -179,4 +229,49 @@ func (e *LintingRuleEngine) formatLintOutput(filePath string, issues []linters.I
 	}
 
 	return output.String()
+}
+
+// checkTestFile checks for an associated _test.go file and runs linting on it
+func (e *LintingRuleEngine) checkTestFile(ctx context.Context, filePath string) {
+	// Construct test file path
+	base := strings.TrimSuffix(filePath, ".go")
+	testPath := base + "_test.go"
+
+	// Check if test file exists
+	content, err := os.ReadFile(testPath)
+	if err != nil {
+		// No test file, that's ok
+		return
+	}
+
+	// Run linters on test file
+	for _, linter := range e.linters {
+		if linter.CanHandle(testPath) {
+			result, err := linter.Lint(ctx, testPath, content)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "\n> Test file linting error for %s: %v\n", testPath, err)
+				continue
+			}
+
+			// Report any issues found in test file
+			if len(result.Issues) > 0 {
+				var errorIssues, warningIssues []linters.Issue
+				for _, issue := range result.Issues {
+					if issue.Severity == "error" {
+						errorIssues = append(errorIssues, issue)
+					} else {
+						warningIssues = append(warningIssues, issue)
+					}
+				}
+
+				if len(errorIssues) > 0 {
+					output := e.formatLintOutput(testPath, errorIssues, true)
+					fmt.Fprintf(os.Stderr, "\n> Test file feedback:\n%s\n", output)
+				} else if len(warningIssues) > 0 {
+					output := e.formatLintOutput(testPath, warningIssues, false)
+					fmt.Fprintf(os.Stderr, "\n> Test file feedback:\n%s\n", output)
+				}
+			}
+		}
+	}
 }

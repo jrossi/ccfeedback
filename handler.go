@@ -11,10 +11,11 @@ import (
 
 // Handler processes hook messages and generates responses
 type Handler struct {
-	parser     *Parser
-	registry   *Registry
-	ruleEngine RuleEngine
-	mu         sync.RWMutex
+	parser          *Parser
+	registry        *Registry
+	ruleEngine      RuleEngine
+	mu              sync.RWMutex
+	lastMessageType HookEventName // Track the type of the last processed message
 }
 
 // NewHandler creates a new hook handler
@@ -70,6 +71,24 @@ func (h *Handler) ProcessInputWithResponse(ctx context.Context) (*HookResponse, 
 
 // ProcessMessage handles a specific hook message
 func (h *Handler) ProcessMessage(ctx context.Context, msg interface{}) (*HookResponse, error) {
+	h.mu.Lock()
+	// Store the message type before processing
+	switch msg.(type) {
+	case *PreToolUseMessage:
+		h.lastMessageType = PreToolUseEvent
+	case *PostToolUseMessage:
+		h.lastMessageType = PostToolUseEvent
+	case *NotificationMessage:
+		h.lastMessageType = NotificationEvent
+	case *StopMessage:
+		h.lastMessageType = StopEvent
+	case *SubagentStopMessage:
+		h.lastMessageType = SubagentStopEvent
+	case *PreCompactMessage:
+		h.lastMessageType = PreCompactEvent
+	}
+	h.mu.Unlock()
+
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
@@ -101,6 +120,13 @@ func (h *Handler) SetRuleEngine(engine RuleEngine) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.ruleEngine = engine
+}
+
+// IsPostToolUseHook returns true if the last processed message was a PostToolUse hook
+func (h *Handler) IsPostToolUseHook() bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return h.lastMessageType == PostToolUseEvent
 }
 
 func (h *Handler) handlePreToolUse(ctx context.Context, msg *PreToolUseMessage) (*HookResponse, error) {
