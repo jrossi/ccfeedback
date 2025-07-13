@@ -149,32 +149,32 @@ func (e *LintingRuleEngine) EvaluatePreCompact(ctx context.Context, msg *PreComp
 // formatLintOutput formats linting issues in a style similar to smart-lint.sh
 func (e *LintingRuleEngine) formatLintOutput(filePath string, issues []linters.Issue, isBlocking bool) string {
 	var output strings.Builder
-	
+
 	// Header similar to smart-lint.sh
 	output.WriteString(fmt.Sprintf("- [ccfeedback:%s]: ", filePath))
-	
+
 	// Add details for each issue
 	for i, issue := range issues {
 		if i > 0 {
 			output.WriteString("\n  ")
 		}
-		
+
 		// Format: file:line:column: message
 		if issue.Line > 0 && issue.Column > 0 {
-			output.WriteString(fmt.Sprintf("%s:%d:%d: %s", 
+			output.WriteString(fmt.Sprintf("%s:%d:%d: %s",
 				strings.TrimPrefix(filePath, "/Users/jrossi/src/ccfeedback/"),
 				issue.Line, issue.Column, issue.Message))
 		} else {
 			output.WriteString(issue.Message)
 		}
-		
+
 		if issue.Rule != "" {
 			output.WriteString(fmt.Sprintf(" (%s)", issue.Rule))
 		}
 	}
-	
+
 	output.WriteString("\n")
-	
+
 	// Add footer similar to smart-lint.sh
 	if isBlocking {
 		issueCount := len(issues)
@@ -183,6 +183,6 @@ func (e *LintingRuleEngine) formatLintOutput(filePath string, issues []linters.I
 	} else {
 		output.WriteString("\n⚠️  Found formatting issues - consider running gofmt")
 	}
-	
+
 	return output.String()
 }

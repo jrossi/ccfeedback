@@ -5,7 +5,7 @@ A high-performance Go library and CLI tool for handling Claude Code hooks with b
 ## Features
 
 - **Built-in Go Linting**: Automatic formatting validation and syntax checking
-- **Test Runner**: Automatically runs corresponding test files when Go files are written
+- **Go Validation**: Pre-write syntax checking and formatting validation
 - **Module-Aware**: Correctly detects Go module roots and runs tests from proper directory
 - **High Performance**: Uses go-json for 2-3x faster JSON parsing
 - **Fully Typed**: Strong typing for all hook message types
@@ -92,9 +92,11 @@ api := ccfeedback.NewBuilder().
     WithTimeout(30 * time.Second).
     WithRuleEngine(myEngine).
     RegisterHook(ccfeedback.HookConfig{
-        Name:      "security-check",
-        EventType: ccfeedback.PreToolUseEvent,
-        Priority:  1,
+        Name:        "security-check",
+        EventType:   ccfeedback.PreToolUseEvent,
+        ToolPattern: "Write|Edit",
+        Priority:    1,
+        Timeout:     30 * time.Second,
     }).
     Build()
 ```
@@ -119,14 +121,14 @@ ccfeedback -debug
 CCFeedback automatically lints Go files when Claude Code writes or edits them:
 
 **Pre-Write Validation:**
-- Blocks writes of Go files with syntax errors
+- Blocks writes of Go files with severe syntax errors
 - Warns about formatting issues (but allows the write)
 - Skips generated files and testdata directories
 
 **Post-Write Actions:**
-- For `foo.go` → automatically runs `foo_test.go` if it exists
-- For `foo_test.go` → runs the test file itself
-- All tests run from the correct module root directory
+- Currently limited due to hook message structure - PostToolUse messages don't include file paths
+- Test running is available during PreToolUse validation for immediate feedback
+- All operations are module-aware and respect Go project structure
 
 **Example Hook Configuration:**
 ```json
@@ -202,7 +204,7 @@ Hook responses can use either exit codes or JSON:
 
 ## Examples
 
-See the `examples/` directory for more complete examples (to be added).
+Working examples are included in the usage section above. For production use, ensure your hooks.json configuration points to the installed ccfeedback binary location.
 
 ## Contributing
 
