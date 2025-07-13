@@ -2,10 +2,11 @@ package ccfeedback
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/goccy/go-json"
 )
 
 func TestAPI_New(t *testing.T) {
@@ -52,7 +53,7 @@ func TestAPI_ProcessStdin(t *testing.T) {
 
 	// Write test data
 	go func() {
-		w.Write([]byte(input))
+		_, _ = w.Write([]byte(input))
 		w.Close()
 	}()
 

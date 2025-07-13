@@ -2,10 +2,11 @@ package ccfeedback
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/goccy/go-json"
 )
 
 func TestParser_ParseHookMessage_AllMessageTypes(t *testing.T) {
@@ -112,7 +113,7 @@ func TestParser_ParseHookMessage_AllMessageTypes(t *testing.T) {
 				"session_id": "test",
 				"tool_name": "Write",
 				"tool_output": "Error: permission denied",
-				"tool_error": true
+				"tool_error": "true"
 			}`,
 			msgType: "PostToolUse",
 		},
@@ -242,8 +243,10 @@ func TestStreamParser_EdgeCases(t *testing.T) {
 			count: 2,
 		},
 		{
-			name:  "messages_with_whitespace",
-			input: `  {"hook_event_name":"PreToolUse","session_id":"1","tool_name":"Write"}  \n\n  {"hook_event_name":"PostToolUse","session_id":"2","tool_name":"Write"}  `,
+			name: "messages_with_whitespace",
+			input: `  {"hook_event_name":"PreToolUse","session_id":"1","tool_name":"Write"}  
+
+  {"hook_event_name":"PostToolUse","session_id":"2","tool_name":"Write"}  `,
 			count: 2,
 		},
 		{

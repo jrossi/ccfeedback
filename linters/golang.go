@@ -3,7 +3,6 @@ package linters
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"go/format"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	json "github.com/goccy/go-json"
 )
 
 // GoLinter handles Go file linting, formatting, and test running with golangci-lint integration
@@ -339,8 +340,13 @@ func (l *GoLinter) runTests(ctx context.Context, testFile string) (string, error
 	// Convert to Unix-style path for go test
 	testPath := "./" + filepath.ToSlash(relPath)
 
-	// Run go test
-	cmd := exec.CommandContext(ctx, "go", "test", "-v", testPath)
+	// Build the specific test file argument
+	// This tells go test to ONLY compile and run this specific test file
+	specificTestFile := filepath.Join(testPath, filepath.Base(testFile))
+
+	// Run go test for ONLY this specific test file
+	// Using the file argument makes go test only run tests from that file
+	cmd := exec.CommandContext(ctx, "go", "test", "-v", specificTestFile)
 	cmd.Dir = moduleInfo.Root
 
 	var stdout, stderr bytes.Buffer

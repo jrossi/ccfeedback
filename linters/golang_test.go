@@ -2,11 +2,12 @@ package linters
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/goccy/go-json"
 )
 
 func TestGoLinter_CanHandle(t *testing.T) {

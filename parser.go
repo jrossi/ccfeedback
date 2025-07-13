@@ -133,10 +133,20 @@ func (p *Parser) ParseMultiple(data []byte) ([]interface{}, error) {
 
 // MarshalHookResponse serializes a hook response to JSON
 func (p *Parser) MarshalHookResponse(response *HookResponse) ([]byte, error) {
-	return json.Marshal(response)
+	data, err := json.Marshal(response)
+	if err != nil {
+		return nil, err
+	}
+	// Add newline to match encoding/json behavior
+	return append(data, '\n'), nil
 }
 
 // MarshalHookMessage serializes any hook message to JSON
 func (p *Parser) MarshalHookMessage(message interface{}) ([]byte, error) {
-	return json.Marshal(message)
+	data, err := json.Marshal(message)
+	if err != nil {
+		return nil, err
+	}
+	// Add newline to match encoding/json behavior
+	return append(data, '\n'), nil
 }

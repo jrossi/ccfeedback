@@ -2,13 +2,14 @@ package ccfeedback
 
 import (
 	"bytes"
-	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/goccy/go-json"
 )
 
 func TestE2E_MarkdownHookIntegration(t *testing.T) {

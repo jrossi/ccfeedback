@@ -49,7 +49,7 @@ func TestExecutor_Execute(t *testing.T) {
 
 	// Write test data
 	go func() {
-		w.Write([]byte(input))
+		_, _ = w.Write([]byte(input))
 		w.Close()
 	}()
 
@@ -155,7 +155,7 @@ func TestExecutor_ExecuteWithExitCode(t *testing.T) {
 
 			// Write test data
 			go func() {
-				w.Write([]byte(tt.input))
+				_, _ = w.Write([]byte(tt.input))
 				w.Close()
 			}()
 
@@ -259,7 +259,7 @@ func TestExecutor_SetRuleEngine(t *testing.T) {
 
 	input := `{"hook_event_name":"PreToolUse","session_id":"test","tool_name":"Write"}`
 	go func() {
-		w.Write([]byte(input))
+		_, _ = w.Write([]byte(input))
 		w.Close()
 	}()
 
@@ -476,9 +476,9 @@ func TestChainExecutor_Execute(t *testing.T) {
 	input := `{"hook_event_name":"PreToolUse","session_id":"test","tool_name":"Write"}`
 	go func() {
 		// Write for both executors
-		w.Write([]byte(input))
-		w.Write([]byte("\n"))
-		w.Write([]byte(input))
+		_, _ = w.Write([]byte(input))
+		_, _ = w.Write([]byte("\n"))
+		_, _ = w.Write([]byte(input))
 		w.Close()
 	}()
 
@@ -508,7 +508,7 @@ func TestChainExecutor_Execute_Error(t *testing.T) {
 
 	input := `{"hook_event_name":"PreToolUse","session_id":"test","tool_name":"Write"}`
 	go func() {
-		w.Write([]byte(input))
+		_, _ = w.Write([]byte(input))
 		w.Close()
 	}()
 
@@ -566,7 +566,7 @@ func TestPostToolUseAlwaysReturnsSuccess(t *testing.T) {
 
 			// Write input and close
 			go func() {
-				w.Write([]byte(input))
+				_, _ = w.Write([]byte(input))
 				w.Close()
 			}()
 

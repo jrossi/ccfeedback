@@ -247,8 +247,8 @@ func TestCompositeRuleEngine_MultipleEngines(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Unexpected error: %v", err)
 		}
-		if resp != nil {
-			t.Errorf("Expected nil when all engines return nil, got %v", resp)
+		if resp == nil || resp.Decision != "approve" {
+			t.Errorf("Expected approve when all engines return nil, got %v", resp)
 		}
 	})
 }
@@ -260,17 +260,17 @@ func TestCompositeRuleEngine_ContextCancellation(t *testing.T) {
 	slowEngine := &BaseRuleEngine{}
 	composite.AddEngine(slowEngine)
 
-	// Create cancelled context
+	// Create canceled context
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	// All methods should handle cancelled context gracefully
-	t.Run("PreToolUse_cancelled", func(t *testing.T) {
+	// All methods should handle canceled context gracefully
+	t.Run("PreToolUse_canceled", func(t *testing.T) {
 		msg := &PreToolUseMessage{}
 		resp, err := composite.EvaluatePreToolUse(ctx, msg)
-		// Should not error on cancelled context for these simple operations
+		// Should not error on canceled context for these simple operations
 		if err != nil {
-			t.Logf("Got error with cancelled context: %v", err)
+			t.Logf("Got error with canceled context: %v", err)
 		}
 		if resp == nil {
 			t.Log("Got nil response as expected")
@@ -319,44 +319,51 @@ func TestCompositeRuleEngine_EmptyEngines(t *testing.T) {
 
 	// All methods should handle empty engines gracefully
 	tests := []struct {
-		name string
-		fn   func() (*HookResponse, error)
+		name          string
+		fn            func() (*HookResponse, error)
+		expectApprove bool
 	}{
 		{
 			"PreToolUse",
 			func() (*HookResponse, error) {
 				return composite.EvaluatePreToolUse(ctx, &PreToolUseMessage{})
 			},
+			true, // PreToolUse returns approve by default
 		},
 		{
 			"PostToolUse",
 			func() (*HookResponse, error) {
 				return composite.EvaluatePostToolUse(ctx, &PostToolUseMessage{})
 			},
+			false, // Other events return nil
 		},
 		{
 			"Notification",
 			func() (*HookResponse, error) {
 				return composite.EvaluateNotification(ctx, &NotificationMessage{})
 			},
+			false,
 		},
 		{
 			"Stop",
 			func() (*HookResponse, error) {
 				return composite.EvaluateStop(ctx, &StopMessage{})
 			},
+			false,
 		},
 		{
 			"SubagentStop",
 			func() (*HookResponse, error) {
 				return composite.EvaluateSubagentStop(ctx, &SubagentStopMessage{})
 			},
+			false,
 		},
 		{
 			"PreCompact",
 			func() (*HookResponse, error) {
 				return composite.EvaluatePreCompact(ctx, &PreCompactMessage{})
 			},
+			false,
 		},
 	}
 
@@ -366,8 +373,14 @@ func TestCompositeRuleEngine_EmptyEngines(t *testing.T) {
 			if err != nil {
 				t.Errorf("Unexpected error with empty engines: %v", err)
 			}
-			if resp != nil {
-				t.Errorf("Expected nil response with empty engines, got %v", resp)
+			if tt.expectApprove {
+				if resp == nil || resp.Decision != "approve" {
+					t.Errorf("Expected approve response with empty engines, got %v", resp)
+				}
+			} else {
+				if resp != nil {
+					t.Errorf("Expected nil response with empty engines, got %v", resp)
+				}
 			}
 		})
 	}

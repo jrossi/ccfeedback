@@ -22,7 +22,7 @@ func TestHandler_ProcessInput(t *testing.T) {
 
 	// Write test data
 	go func() {
-		w.Write([]byte(input))
+		_, _ = w.Write([]byte(input))
 		w.Close()
 	}()
 
@@ -137,7 +137,7 @@ func TestHandler_ProcessInputWithResponse(t *testing.T) {
 
 			// Write test data
 			go func() {
-				w.Write([]byte(tt.input))
+				_, _ = w.Write([]byte(tt.input))
 				w.Close()
 			}()
 
@@ -381,7 +381,7 @@ func TestHandler_ProcessInput_Errors(t *testing.T) {
 
 			// Write test data
 			go func() {
-				w.Write([]byte(tt.input))
+				_, _ = w.Write([]byte(tt.input))
 				w.Close()
 			}()
 
@@ -475,7 +475,7 @@ func TestHandler_ConcurrentAccess(t *testing.T) {
 				},
 				ToolName: "Write",
 			}
-			handler.ProcessMessage(context.Background(), msg)
+			_, _ = handler.ProcessMessage(context.Background(), msg)
 			done <- true
 		}()
 	}
