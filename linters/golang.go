@@ -340,13 +340,24 @@ func (l *GoLinter) runTests(ctx context.Context, testFile string) (string, error
 	// Convert to Unix-style path for go test
 	testPath := "./" + filepath.ToSlash(relPath)
 
-	// Build the specific test file argument
-	// This tells go test to ONLY compile and run this specific test file
-	specificTestFile := filepath.Join(testPath, filepath.Base(testFile))
+	// Extract the test file name to build a pattern
+	testFileName := filepath.Base(testFile)
+	// Remove the .go extension to get the base name
+	testBaseName := strings.TrimSuffix(testFileName, "_test.go")
+	
+	// Capitalize first letter for test pattern
+	if len(testBaseName) > 0 {
+		testBaseName = strings.ToUpper(testBaseName[:1]) + testBaseName[1:]
+	}
+	
+	// Build a regex pattern that matches only tests from this specific file
+	// For example: if the file is executor_test.go, this will match ^TestExecutor
+	// This ensures we only run tests that start with Test<Filename>
+	testPattern := fmt.Sprintf("^Test%s", testBaseName)
 
-	// Run go test for ONLY this specific test file
-	// Using the file argument makes go test only run tests from that file
-	cmd := exec.CommandContext(ctx, "go", "test", "-v", specificTestFile)
+	// Run go test with -run flag to only run tests matching the pattern
+	// This ensures we only run tests from the specific test file
+	cmd := exec.CommandContext(ctx, "go", "test", "-v", "-run", testPattern, testPath)
 	cmd.Dir = moduleInfo.Root
 
 	var stdout, stderr bytes.Buffer
