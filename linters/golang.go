@@ -3,6 +3,7 @@ package linters
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"go/format"
 	"os"
@@ -12,11 +13,36 @@ import (
 	"sync"
 )
 
-// GoLinter handles Go file linting, formatting, and test running
+// GoLinter handles Go file linting, formatting, and test running with golangci-lint integration
 type GoLinter struct {
 	// Cache module roots to avoid repeated filesystem walks
 	moduleCache map[string]*ModuleInfo
-	mu          sync.RWMutex
+	// Cache golangci-lint binary path for performance
+	golangciPath string
+	golangciOnce sync.Once
+	mu           sync.RWMutex
+}
+
+// GolangciLintIssue represents an issue from golangci-lint JSON output
+type GolangciLintIssue struct {
+	FromLinter  string   `json:"FromLinter"`
+	Text        string   `json:"Text"`
+	Severity    string   `json:"Severity"`
+	SourceLines []string `json:"SourceLines"`
+	Replacement struct {
+		NewLines []string `json:"NewLines"`
+	} `json:"Replacement"`
+	Pos struct {
+		Filename string `json:"Filename"`
+		Offset   int    `json:"Offset"`
+		Line     int    `json:"Line"`
+		Column   int    `json:"Column"`
+	} `json:"Pos"`
+}
+
+// GolangciLintOutput represents the complete JSON output from golangci-lint
+type GolangciLintOutput struct {
+	Issues []GolangciLintIssue `json:"Issues"`
 }
 
 // ModuleInfo contains information about a Go module
@@ -43,7 +69,101 @@ func (l *GoLinter) CanHandle(filePath string) bool {
 	return strings.HasSuffix(filePath, ".go")
 }
 
-// Lint performs linting on a Go file
+// findGolangciLint locates the golangci-lint binary and caches the path
+func (l *GoLinter) findGolangciLint() string {
+	l.golangciOnce.Do(func() {
+		// Check standard Go installation location first
+		standardPath := filepath.Join(os.Getenv("HOME"), "go", "bin", "golangci-lint")
+		if _, err := os.Stat(standardPath); err == nil {
+			l.golangciPath = standardPath
+			return
+		}
+
+		// Check PATH
+		if path, err := exec.LookPath("golangci-lint"); err == nil {
+			l.golangciPath = path
+			return
+		}
+
+		// Not found
+		l.golangciPath = ""
+	})
+	return l.golangciPath
+}
+
+// runGolangciLint executes golangci-lint with fast mode on the specified file
+func (l *GoLinter) runGolangciLint(ctx context.Context, filePath string) (*GolangciLintOutput, error) {
+	golangciPath := l.findGolangciLint()
+	if golangciPath == "" {
+		return nil, fmt.Errorf("golangci-lint not found")
+	}
+
+	// Find module root for proper context
+	moduleInfo, err := l.FindModuleRoot(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find module root: %w", err)
+	}
+
+	// Check for .golangci.yml config file
+	configPath := filepath.Join(moduleInfo.Root, ".golangci.yml")
+	args := []string{"run", "--fast", "--out-format=json"}
+
+	if _, err := os.Stat(configPath); err == nil {
+		args = append(args, "--config="+configPath)
+	}
+
+	// Add the file path
+	args = append(args, filePath)
+
+	// Execute golangci-lint
+	cmd := exec.CommandContext(ctx, golangciPath, args...)
+	cmd.Dir = moduleInfo.Root
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	// golangci-lint returns non-zero exit code when issues are found, which is expected
+	err = cmd.Run()
+
+	// Check if the error is due to issues found (expected) or actual failure
+	if err != nil && stdout.Len() == 0 {
+		return nil, fmt.Errorf("golangci-lint failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	// Parse JSON output
+	var output GolangciLintOutput
+	if stdout.Len() > 0 {
+		if err := json.Unmarshal(stdout.Bytes(), &output); err != nil {
+			return nil, fmt.Errorf("failed to parse golangci-lint output: %w", err)
+		}
+	}
+
+	return &output, nil
+}
+
+// convertGolangciIssues converts golangci-lint issues to our internal Issue format
+func (l *GoLinter) convertGolangciIssues(golangciIssues []GolangciLintIssue) []Issue {
+	var issues []Issue
+	for _, issue := range golangciIssues {
+		severity := "warning"
+		if issue.Severity == "error" {
+			severity = "error"
+		}
+
+		issues = append(issues, Issue{
+			File:     issue.Pos.Filename,
+			Line:     issue.Pos.Line,
+			Column:   issue.Pos.Column,
+			Severity: severity,
+			Message:  issue.Text,
+			Rule:     issue.FromLinter,
+		})
+	}
+	return issues
+}
+
+// Lint performs enhanced linting on a Go file using golangci-lint with fallback
 func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*LintResult, error) {
 	result := &LintResult{
 		Success: true,
@@ -60,7 +180,7 @@ func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*
 		return result, nil
 	}
 
-	// Check formatting
+	// Always check basic syntax first with go/format (fast and reliable)
 	formatted, err := format.Source(content)
 	if err != nil {
 		result.Success = false
@@ -84,11 +204,26 @@ func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*
 			Column:   1,
 			Severity: "warning",
 			Message:  "File is not properly formatted with gofmt",
-			Rule:     "format",
+			Rule:     "gofmt",
 		})
 	}
 
-	// If this is a test file, run the tests
+	// Try enhanced linting with golangci-lint fast mode
+	if golangciOutput, err := l.runGolangciLint(ctx, filePath); err == nil {
+		// Successfully ran golangci-lint, add its issues
+		golangciIssues := l.convertGolangciIssues(golangciOutput.Issues)
+		result.Issues = append(result.Issues, golangciIssues...)
+
+		// Check if any issues are errors (should block)
+		for _, issue := range golangciIssues {
+			if issue.Severity == "error" {
+				result.Success = false
+			}
+		}
+	}
+	// If golangci-lint fails, we continue with basic linting (graceful fallback)
+
+	// Run tests if this is a test file
 	if strings.HasSuffix(filePath, "_test.go") {
 		if output, err := l.runTests(ctx, filePath); err != nil {
 			result.Success = false

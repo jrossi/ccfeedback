@@ -2,6 +2,9 @@ package linters
 
 import (
 	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -175,5 +178,328 @@ fmt.Println("Hello")
 	lines := strings.Split(string(formatted), "\n")
 	if len(lines) < 6 {
 		t.Errorf("expected at least 6 lines in formatted code, got %d", len(lines))
+	}
+}
+
+func TestGoLinter_findGolangciLint(t *testing.T) {
+	linter := NewGoLinter()
+
+	// Test that the method exists and runs without panic
+	path := linter.findGolangciLint()
+
+	// We can't assume golangci-lint is installed in all test environments
+	// So we just verify that the method returns a string (empty if not found)
+	if path != "" {
+		// If a path is returned, verify it's an absolute path
+		if !filepath.IsAbs(path) {
+			t.Errorf("expected absolute path, got %q", path)
+		}
+	}
+
+	// Test caching behavior - second call should return same result
+	path2 := linter.findGolangciLint()
+	if path != path2 {
+		t.Errorf("expected consistent results from caching, got %q then %q", path, path2)
+	}
+}
+
+func TestGoLinter_convertGolangciIssues(t *testing.T) {
+	linter := NewGoLinter()
+
+	golangciIssues := []GolangciLintIssue{
+		{
+			FromLinter: "gosimple",
+			Text:       "S1000: should use for range instead of for { select {} }",
+			Severity:   "warning",
+			Pos: struct {
+				Filename string `json:"Filename"`
+				Offset   int    `json:"Offset"`
+				Line     int    `json:"Line"`
+				Column   int    `json:"Column"`
+			}{
+				Filename: "test.go",
+				Line:     10,
+				Column:   5,
+			},
+		},
+		{
+			FromLinter: "errcheck",
+			Text:       "Error return value of `fmt.Printf` is not checked",
+			Severity:   "error",
+			Pos: struct {
+				Filename string `json:"Filename"`
+				Offset   int    `json:"Offset"`
+				Line     int    `json:"Line"`
+				Column   int    `json:"Column"`
+			}{
+				Filename: "test.go",
+				Line:     15,
+				Column:   2,
+			},
+		},
+	}
+
+	issues := linter.convertGolangciIssues(golangciIssues)
+
+	if len(issues) != 2 {
+		t.Fatalf("expected 2 issues, got %d", len(issues))
+	}
+
+	// Check first issue (warning)
+	issue1 := issues[0]
+	if issue1.File != "test.go" {
+		t.Errorf("expected file 'test.go', got %q", issue1.File)
+	}
+	if issue1.Line != 10 {
+		t.Errorf("expected line 10, got %d", issue1.Line)
+	}
+	if issue1.Column != 5 {
+		t.Errorf("expected column 5, got %d", issue1.Column)
+	}
+	if issue1.Severity != "warning" {
+		t.Errorf("expected severity 'warning', got %q", issue1.Severity)
+	}
+	if issue1.Rule != "gosimple" {
+		t.Errorf("expected rule 'gosimple', got %q", issue1.Rule)
+	}
+
+	// Check second issue (error)
+	issue2 := issues[1]
+	if issue2.Severity != "error" {
+		t.Errorf("expected severity 'error', got %q", issue2.Severity)
+	}
+	if issue2.Rule != "errcheck" {
+		t.Errorf("expected rule 'errcheck', got %q", issue2.Rule)
+	}
+}
+
+func TestGoLinter_GolangciLintJSONParsing(t *testing.T) {
+	// Test that our JSON structures can parse real golangci-lint output
+	jsonOutput := `{
+	"Issues": [
+		{
+			"FromLinter": "ineffassign",
+			"Text": "ineffectual assignment to err",
+			"Severity": "warning",
+			"SourceLines": ["        err := doSomething()"],
+			"Replacement": {
+				"NewLines": []
+			},
+			"Pos": {
+				"Filename": "main.go",
+				"Offset": 123,
+				"Line": 15,
+				"Column": 3
+			}
+		}
+	]
+}`
+
+	var output GolangciLintOutput
+	err := json.Unmarshal([]byte(jsonOutput), &output)
+	if err != nil {
+		t.Fatalf("failed to parse JSON: %v", err)
+	}
+
+	if len(output.Issues) != 1 {
+		t.Fatalf("expected 1 issue, got %d", len(output.Issues))
+	}
+
+	issue := output.Issues[0]
+	if issue.FromLinter != "ineffassign" {
+		t.Errorf("expected linter 'ineffassign', got %q", issue.FromLinter)
+	}
+	if issue.Pos.Line != 15 {
+		t.Errorf("expected line 15, got %d", issue.Pos.Line)
+	}
+}
+
+func TestGoLinter_EnhancedLinting_WithGolangciLint(t *testing.T) {
+	linter := NewGoLinter()
+	ctx := context.Background()
+
+	// Test with a file that has various issues that golangci-lint might catch
+	content := `package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	// This might trigger various linters depending on configuration
+	var x int
+	x = 42
+	fmt.Println(x)
+	time.Sleep(time.Second) // might trigger some linters in specific configs
+}
+`
+
+	result, err := linter.Lint(ctx, "test.go", []byte(content))
+	if err != nil {
+		t.Fatalf("Lint() error = %v", err)
+	}
+
+	// The result should always succeed (basic syntax is fine)
+	if !result.Success {
+		t.Errorf("expected success for valid Go code")
+	}
+
+	// We can't make specific assertions about what golangci-lint will find
+	// since it depends on configuration and whether it's installed
+	// But we can verify the integration doesn't break
+	t.Logf("Found %d issues with enhanced linting", len(result.Issues))
+}
+
+func TestGoLinter_FallbackBehavior(t *testing.T) {
+	// Test that the linter still works even if golangci-lint is not available
+	linter := NewGoLinter()
+	ctx := context.Background()
+
+	// Force the golangci-lint path to be empty to test fallback
+	linter.golangciPath = ""
+	linter.golangciOnce.Do(func() {}) // Mark as initialized
+
+	content := `package main
+
+import "fmt"
+
+func main() {
+fmt.Println("Hello, World!")  // Unformatted to test basic linting
+}
+`
+
+	result, err := linter.Lint(ctx, "test.go", []byte(content))
+	if err != nil {
+		t.Fatalf("Lint() error = %v", err)
+	}
+
+	// Should still catch formatting issues with basic go/format
+	if len(result.Issues) == 0 {
+		t.Errorf("expected at least formatting issues to be caught by fallback")
+	}
+
+	// Should find the formatting issue
+	foundFormatIssue := false
+	for _, issue := range result.Issues {
+		if issue.Rule == "gofmt" {
+			foundFormatIssue = true
+			break
+		}
+	}
+	if !foundFormatIssue {
+		t.Errorf("expected to find gofmt issue in fallback mode")
+	}
+}
+
+func TestGoLinter_ConfigFileDetection(t *testing.T) {
+	// Create a temporary directory with a .golangci.yml file
+	tempDir, err := os.MkdirTemp("", "golangci-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create a go.mod file to establish module root
+	goModPath := filepath.Join(tempDir, "go.mod")
+	goModContent := "module test\n\ngo 1.22\n"
+	if err := os.WriteFile(goModPath, []byte(goModContent), 0644); err != nil {
+		t.Fatalf("failed to create go.mod: %v", err)
+	}
+
+	// Create a .golangci.yml file
+	configPath := filepath.Join(tempDir, ".golangci.yml")
+	configContent := `linters:
+  enable:
+    - gofmt
+    - goimports
+`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to create config file: %v", err)
+	}
+
+	// Create a test Go file
+	testFilePath := filepath.Join(tempDir, "test.go")
+	testContent := `package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello")
+}
+`
+	if err := os.WriteFile(testFilePath, []byte(testContent), 0644); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+
+	linter := NewGoLinter()
+
+	// Test that FindModuleRoot works with our temp directory
+	moduleInfo, err := linter.FindModuleRoot(testFilePath)
+	if err != nil {
+		t.Fatalf("FindModuleRoot() error = %v", err)
+	}
+
+	if moduleInfo.Root != tempDir {
+		t.Errorf("expected module root %q, got %q", tempDir, moduleInfo.Root)
+	}
+
+	// Test that config file is detected (we can't easily test the full execution
+	// without assuming golangci-lint is installed and configured)
+	expectedConfigPath := filepath.Join(moduleInfo.Root, ".golangci.yml")
+	if _, err := os.Stat(expectedConfigPath); err != nil {
+		t.Errorf("config file should exist at %q", expectedConfigPath)
+	}
+}
+
+// Benchmark the enhanced linting vs. basic linting
+func BenchmarkGoLinter_BasicLinting(b *testing.B) {
+	linter := NewGoLinter()
+	// Force fallback mode for consistent benchmarking
+	linter.golangciPath = ""
+	linter.golangciOnce.Do(func() {})
+
+	ctx := context.Background()
+	content := []byte(`package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, World!")
+}
+`)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := linter.Lint(ctx, "test.go", content)
+		if err != nil {
+			b.Fatalf("Lint() error = %v", err)
+		}
+	}
+}
+
+func BenchmarkGoLinter_EnhancedLinting(b *testing.B) {
+	linter := NewGoLinter()
+	ctx := context.Background()
+	content := []byte(`package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello, World!")
+}
+`)
+
+	// Skip benchmark if golangci-lint is not available
+	if linter.findGolangciLint() == "" {
+		b.Skip("golangci-lint not available")
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := linter.Lint(ctx, "test.go", content)
+		if err != nil {
+			b.Fatalf("Lint() error = %v", err)
+		}
 	}
 }

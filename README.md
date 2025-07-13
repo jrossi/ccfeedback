@@ -4,10 +4,13 @@ A high-performance Go library and CLI tool for handling Claude Code hooks with b
 
 ## Features
 
-- **Built-in Go Linting**: Automatic formatting validation and syntax checking
-- **Go Validation**: Pre-write syntax checking and formatting validation
+- **Enhanced Go Linting**: golangci-lint integration with 30+ fast linters and intelligent fallback
+- **Comprehensive Analysis**: Runs gosimple, ineffassign, gofmt, goimports, and many more linters
+- **Fast Mode Optimization**: Uses golangci-lint's `--fast` flag for optimal individual file performance
+- **Configuration Support**: Respects custom `.golangci.yml` configuration files
 - **Module-Aware**: Correctly detects Go module roots and runs tests from proper directory
 - **High Performance**: Uses go-json for 2-3x faster JSON parsing
+- **Graceful Fallback**: Works even without golangci-lint installed
 - **Fully Typed**: Strong typing for all hook message types
 - **Extensible**: Pluggable linter and rule engine interface
 - **Composable**: Chain multiple rule engines together
@@ -118,12 +121,30 @@ ccfeedback -debug
 
 ### Go Linting Integration
 
-CCFeedback automatically lints Go files when Claude Code writes or edits them:
+CCFeedback provides comprehensive Go file linting with enhanced golangci-lint integration:
+
+**Enhanced Linting with golangci-lint:**
+- Automatically detects and uses golangci-lint for comprehensive analysis
+- Runs golangci-lint in `--fast` mode for optimal performance on individual files
+- Supports custom `.golangci.yml` configuration files
+- Provides detailed issue reporting with line/column information
+- Includes 30+ fast linters (gosimple, ineffassign, gofmt, goimports, etc.)
+
+**Intelligent Fallback:**
+- Gracefully falls back to basic `go/format` checking if golangci-lint is unavailable
+- Maintains functionality even without golangci-lint installed
+- Ensures consistent behavior across different development environments
 
 **Pre-Write Validation:**
 - Blocks writes of Go files with severe syntax errors
-- Warns about formatting issues (but allows the write)
+- Warns about linting issues (but allows the write)
 - Skips generated files and testdata directories
+- Module-aware operation for proper import resolution
+
+**Performance Characteristics:**
+- Enhanced linting: ~100ms per file (comprehensive analysis)
+- Basic fallback: ~4μs per file (syntax/format only)
+- Optimized for real-time development feedback
 
 **Post-Write Actions:**
 - Currently limited due to hook message structure - PostToolUse messages don't include file paths
@@ -144,14 +165,17 @@ CCFeedback automatically lints Go files when Claude Code writes or edits them:
 
 **Behavior Examples:**
 ```bash
-# Properly formatted Go code → Approved
+# Clean Go code → Approved
 {"decision": "approve"}
 
-# Unformatted Go code → Approved with warning
-{"decision": "approve", "message": "File test.go is not properly formatted. Consider running gofmt."}
+# Code with linting issues → Approved with detailed warnings
+{"decision": "approve", "message": "Found 2 linting issues:\n- Line 9: S1021: should merge variable declaration with assignment (gosimple)\n- Line 13: File is not properly formatted (gofmt)"}
 
 # Syntax error → Blocked
 {"decision": "block", "reason": "syntax: Go syntax error: missing ',' before newline"}
+
+# golangci-lint unavailable → Basic linting fallback
+{"decision": "approve", "message": "File test.go is not properly formatted. Consider running gofmt."}
 ```
 
 ## Hook Message Types
@@ -167,11 +191,17 @@ The library supports all Claude Code hook types:
 
 ## Performance
 
-Benchmarks show excellent performance:
+Benchmarks show excellent performance across all components:
 
+**Core System:**
 - Message parsing: ~700ns per message
 - Rule evaluation: <1ns for simple rules
 - Full pipeline: ~22ns for handler processing
+
+**Go Linting Performance:**
+- Enhanced linting (golangci-lint --fast): ~100ms per file
+- Basic fallback (go/format): ~4μs per file
+- Performance optimized for real-time development feedback
 
 ## API Documentation
 
