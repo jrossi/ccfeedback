@@ -36,8 +36,8 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Create rule engine (using base implementation for now)
-	ruleEngine := ccfeedback.NewBaseRuleEngine()
+	// Create rule engine with linting capabilities
+	ruleEngine := ccfeedback.NewLintingRuleEngine()
 
 	// Create executor
 	executor := ccfeedback.NewExecutor(ruleEngine)

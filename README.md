@@ -1,12 +1,15 @@
 # CCFeedback - Claude Code Hooks Library
 
-A high-performance Go library and CLI tool for handling Claude Code hooks with customizable rule engines. Built with [go-json](https://github.com/goccy/go-json) for optimal JSON parsing performance.
+A high-performance Go library and CLI tool for handling Claude Code hooks with built-in linting capabilities. Features automatic Go file formatting validation and test running. Built with [go-json](https://github.com/goccy/go-json) for optimal JSON parsing performance.
 
 ## Features
 
+- **Built-in Go Linting**: Automatic formatting validation and syntax checking
+- **Test Runner**: Automatically runs corresponding test files when Go files are written
+- **Module-Aware**: Correctly detects Go module roots and runs tests from proper directory
 - **High Performance**: Uses go-json for 2-3x faster JSON parsing
 - **Fully Typed**: Strong typing for all hook message types
-- **Extensible**: Pluggable rule engine interface
+- **Extensible**: Pluggable linter and rule engine interface
 - **Composable**: Chain multiple rule engines together
 - **CLI Tool**: Ready-to-use command-line tool
 - **Well Tested**: Comprehensive test coverage and benchmarks
@@ -109,6 +112,44 @@ ccfeedback -timeout 30s
 
 # Debug mode
 ccfeedback -debug
+```
+
+### Go Linting Integration
+
+CCFeedback automatically lints Go files when Claude Code writes or edits them:
+
+**Pre-Write Validation:**
+- Blocks writes of Go files with syntax errors
+- Warns about formatting issues (but allows the write)
+- Skips generated files and testdata directories
+
+**Post-Write Actions:**
+- For `foo.go` → automatically runs `foo_test.go` if it exists
+- For `foo_test.go` → runs the test file itself
+- All tests run from the correct module root directory
+
+**Example Hook Configuration:**
+```json
+{
+  "PreToolUse": [
+    {
+      "command": "/path/to/ccfeedback",
+      "tool_patterns": ["Write", "Edit", "MultiEdit"]
+    }
+  ]
+}
+```
+
+**Behavior Examples:**
+```bash
+# Properly formatted Go code → Approved
+{"decision": "approve"}
+
+# Unformatted Go code → Approved with warning
+{"decision": "approve", "message": "File test.go is not properly formatted. Consider running gofmt."}
+
+# Syntax error → Blocked
+{"decision": "block", "reason": "syntax: Go syntax error: missing ',' before newline"}
 ```
 
 ## Hook Message Types
