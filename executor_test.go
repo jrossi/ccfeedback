@@ -114,7 +114,7 @@ func TestExecutor_ExecuteWithExitCode(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "post_tool_use_block_returns_success",
+			name: "post_tool_use_with_feedback_returns_1",
 			setupEngine: func() RuleEngine {
 				return &customRuleEngine{
 					postResponse: &HookResponse{
@@ -124,10 +124,10 @@ func TestExecutor_ExecuteWithExitCode(t *testing.T) {
 				}
 			},
 			input:        `{"hook_event_name":"PostToolUse","session_id":"test","tool_name":"Write","tool_output":"test output"}`,
-			wantExitCode: int(ExitSuccess), // PostToolUse should always return success
+			wantExitCode: 1, // PostToolUse with feedback returns exit code 1
 		},
 		{
-			name: "post_tool_use_approve_returns_success",
+			name: "post_tool_use_with_message_returns_1",
 			setupEngine: func() RuleEngine {
 				return &customRuleEngine{
 					postResponse: &HookResponse{
@@ -137,7 +137,17 @@ func TestExecutor_ExecuteWithExitCode(t *testing.T) {
 				}
 			},
 			input:        `{"hook_event_name":"PostToolUse","session_id":"test","tool_name":"Write","tool_output":"test output"}`,
-			wantExitCode: int(ExitSuccess),
+			wantExitCode: 1, // PostToolUse with feedback returns exit code 1
+		},
+		{
+			name: "post_tool_use_without_feedback_returns_success",
+			setupEngine: func() RuleEngine {
+				return &customRuleEngine{
+					postResponse: nil, // No response means no feedback
+				}
+			},
+			input:        `{"hook_event_name":"PostToolUse","session_id":"test","tool_name":"Write","tool_output":"test output"}`,
+			wantExitCode: int(ExitSuccess), // PostToolUse without feedback returns success
 		},
 	}
 
@@ -523,28 +533,46 @@ func TestChainExecutor_Execute_Error(t *testing.T) {
 	}
 }
 
-// TestPostToolUseAlwaysReturnsSuccess verifies that PostToolUse hooks
-// always return exit code 0 (success) regardless of the decision
-func TestPostToolUseAlwaysReturnsSuccess(t *testing.T) {
+// TestPostToolUseExitCodes verifies that PostToolUse hooks
+// return exit code 1 when they have feedback, 0 otherwise
+func TestPostToolUseExitCodes(t *testing.T) {
 	tests := []struct {
-		name     string
-		decision string
-		reason   string
+		name         string
+		response     *HookResponse
+		wantExitCode int
 	}{
 		{
-			name:     "PostToolUse with block decision",
-			decision: "block",
-			reason:   "This should still return success",
+			name: "PostToolUse with block decision returns 1",
+			response: &HookResponse{
+				Decision: "block",
+				Reason:   "This has feedback",
+			},
+			wantExitCode: 1,
 		},
 		{
-			name:     "PostToolUse with approve decision",
-			decision: "approve",
-			reason:   "Normal approve case",
+			name: "PostToolUse with approve decision returns 1",
+			response: &HookResponse{
+				Decision: "approve",
+				Reason:   "Normal approve case",
+			},
+			wantExitCode: 1,
 		},
 		{
-			name:     "PostToolUse with empty decision",
-			decision: "",
-			reason:   "No decision specified",
+			name: "PostToolUse with message returns 1",
+			response: &HookResponse{
+				Message: "Some feedback message",
+			},
+			wantExitCode: 1,
+		},
+		{
+			name:         "PostToolUse with nil response returns 0",
+			response:     nil,
+			wantExitCode: int(ExitSuccess),
+		},
+		{
+			name:         "PostToolUse with empty response returns 0",
+			response:     &HookResponse{},
+			wantExitCode: int(ExitSuccess),
 		},
 	}
 
@@ -570,12 +598,9 @@ func TestPostToolUseAlwaysReturnsSuccess(t *testing.T) {
 				w.Close()
 			}()
 
-			// Create custom rule engine that returns the test decision
+			// Create custom rule engine that returns the test response
 			engine := &customRuleEngine{
-				postResponse: &HookResponse{
-					Decision: tt.decision,
-					Reason:   tt.reason,
-				},
+				postResponse: tt.response,
 			}
 
 			// Create executor with custom engine
@@ -587,10 +612,95 @@ func TestPostToolUseAlwaysReturnsSuccess(t *testing.T) {
 				t.Fatalf("ExecuteWithExitCode() error = %v", err)
 			}
 
-			// PostToolUse should ALWAYS return success (exit code 0)
-			if exitCode != int(ExitSuccess) {
-				t.Errorf("PostToolUse hook returned exit code %d, expected %d (success) for decision=%q",
-					exitCode, ExitSuccess, tt.decision)
+			// Check exit code matches expected
+			if exitCode != tt.wantExitCode {
+				t.Errorf("PostToolUse hook returned exit code %d, expected %d for response=%+v",
+					exitCode, tt.wantExitCode, tt.response)
+			}
+		})
+	}
+}
+
+func TestHasResponseFeedback(t *testing.T) {
+	tests := []struct {
+		name     string
+		response *HookResponse
+		want     bool
+	}{
+		{
+			name:     "nil response",
+			response: nil,
+			want:     false,
+		},
+		{
+			name:     "empty response",
+			response: &HookResponse{},
+			want:     false,
+		},
+		{
+			name: "response with message",
+			response: &HookResponse{
+				Message: "Some feedback",
+			},
+			want: true,
+		},
+		{
+			name: "response with reason",
+			response: &HookResponse{
+				Reason: "Block reason",
+			},
+			want: true,
+		},
+		{
+			name: "response with decision",
+			response: &HookResponse{
+				Decision: "block",
+			},
+			want: true,
+		},
+		{
+			name: "response with stop reason",
+			response: &HookResponse{
+				StopReason: "Error occurred",
+			},
+			want: true,
+		},
+		{
+			name: "response with continue true",
+			response: &HookResponse{
+				Continue: boolPtr(true),
+			},
+			want: true,
+		},
+		{
+			name: "response with continue false",
+			response: &HookResponse{
+				Continue: boolPtr(false),
+			},
+			want: true,
+		},
+		{
+			name: "response with suppress output",
+			response: &HookResponse{
+				SuppressOutput: boolPtr(true),
+			},
+			want: true,
+		},
+		{
+			name: "response with multiple fields",
+			response: &HookResponse{
+				Decision: "block",
+				Reason:   "Multiple reasons",
+				Message:  "User message",
+			},
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := hasResponseFeedback(tt.response); got != tt.want {
+				t.Errorf("hasResponseFeedback() = %v, want %v", got, tt.want)
 			}
 		})
 	}

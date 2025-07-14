@@ -344,12 +344,12 @@ func (l *GoLinter) runTests(ctx context.Context, testFile string) (string, error
 	testFileName := filepath.Base(testFile)
 	// Remove the .go extension to get the base name
 	testBaseName := strings.TrimSuffix(testFileName, "_test.go")
-	
+
 	// Capitalize first letter for test pattern
 	if len(testBaseName) > 0 {
 		testBaseName = strings.ToUpper(testBaseName[:1]) + testBaseName[1:]
 	}
-	
+
 	// Build a regex pattern that matches only tests from this specific file
 	// For example: if the file is executor_test.go, this will match ^TestExecutor
 	// This ensures we only run tests that start with Test<Filename>

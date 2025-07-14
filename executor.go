@@ -45,7 +45,11 @@ func (e *Executor) ExecuteWithExitCode(ctx context.Context) (int, error) {
 
 	// Check if this is a PostToolUse hook by examining the handler's last processed message
 	if e.handler.IsPostToolUseHook() {
-		// Always return success for PostToolUse hooks to provide feedback without blocking
+		// For PostToolUse hooks, return exit code 1 if there's feedback
+		if response != nil && hasResponseFeedback(response) {
+			return 1, nil
+		}
+		// Otherwise return success
 		return int(ExitSuccess), nil
 	}
 
@@ -193,4 +197,19 @@ func (c *ChainExecutor) Execute(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// hasResponseFeedback determines if a HookResponse contains meaningful feedback
+func hasResponseFeedback(response *HookResponse) bool {
+	if response == nil {
+		return false
+	}
+
+	// Check if any feedback fields have content
+	return response.Message != "" ||
+		response.Reason != "" ||
+		response.StopReason != "" ||
+		response.Decision != "" ||
+		response.Continue != nil ||
+		response.SuppressOutput != nil
 }

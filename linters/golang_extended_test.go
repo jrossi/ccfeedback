@@ -95,14 +95,14 @@ func TestGoLinter_runTests_PatternGeneration(t *testing.T) {
 			// This should match the logic in runTests method
 			testFileName := filepath.Base(tt.testFileName)
 			testBaseName := testFileName[:len(testFileName)-len("_test.go")]
-			
+
 			// Capitalize first letter for test pattern (same as in runTests)
 			if len(testBaseName) > 0 {
 				testBaseName = strings.ToUpper(testBaseName[:1]) + testBaseName[1:]
 			}
-			
+
 			testPattern := fmt.Sprintf("^Test%s", testBaseName)
-			
+
 			if testPattern != tt.expectedPattern {
 				t.Errorf("%s: got pattern %q, want %q", tt.description, testPattern, tt.expectedPattern)
 			}
@@ -113,7 +113,7 @@ func TestGoLinter_runTests_PatternGeneration(t *testing.T) {
 func TestGoLinter_runTests_CommandExecution(t *testing.T) {
 	// This test verifies that runTests generates the correct go test command
 	// We'll create a mock test file and verify the command would target only specific tests
-	
+
 	linter := NewGoLinter()
 	ctx := context.Background()
 
@@ -135,9 +135,9 @@ go 1.21
 
 	// Test cases for different file names
 	testCases := []struct {
-		fileName        string
-		testContent     string
-		expectedToRun   []string // Test functions that should run
+		fileName         string
+		testContent      string
+		expectedToRun    []string // Test functions that should run
 		notExpectedToRun []string // Test functions that should NOT run
 	}{
 		{
@@ -148,7 +148,7 @@ func TestExecutor_Basic(t *testing.T) { t.Log("executor basic") }
 func TestExecutor_Advanced(t *testing.T) { t.Log("executor advanced") }
 func TestOther_Function(t *testing.T) { t.Log("other function") }
 `,
-			expectedToRun: []string{"TestExecutor_Basic", "TestExecutor_Advanced"},
+			expectedToRun:    []string{"TestExecutor_Basic", "TestExecutor_Advanced"},
 			notExpectedToRun: []string{"TestOther_Function"},
 		},
 		{
@@ -159,7 +159,7 @@ func TestApi_Create(t *testing.T) { t.Log("api create") }
 func TestApi_Delete(t *testing.T) { t.Log("api delete") }
 func TestHandler_Process(t *testing.T) { t.Log("handler process") }
 `,
-			expectedToRun: []string{"TestApi_Create", "TestApi_Delete"},
+			expectedToRun:    []string{"TestApi_Create", "TestApi_Delete"},
 			notExpectedToRun: []string{"TestHandler_Process"},
 		},
 	}
@@ -174,7 +174,7 @@ func TestHandler_Process(t *testing.T) { t.Log("handler process") }
 
 			// Run the tests
 			output, err := linter.runTests(ctx, testFile)
-			
+
 			// Check that expected tests would run (by checking the pattern)
 			// Extract the pattern from the file name
 			baseName := strings.TrimSuffix(tc.fileName, "_test.go")
@@ -182,13 +182,13 @@ func TestHandler_Process(t *testing.T) { t.Log("handler process") }
 				baseName = strings.ToUpper(baseName[:1]) + baseName[1:]
 			}
 			expectedPattern := fmt.Sprintf("^Test%s", baseName)
-			
+
 			// Verify the pattern is correct
 			if !strings.Contains(output, "RUN") && err == nil {
 				// If no tests ran but no error, the pattern might be too restrictive
 				t.Logf("Warning: No tests ran with pattern %s", expectedPattern)
 			}
-			
+
 			// Log the output for debugging
 			t.Logf("Test output for %s:\n%s", tc.fileName, output)
 			if err != nil {

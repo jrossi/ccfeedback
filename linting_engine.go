@@ -148,13 +148,18 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 				}
 			}
 
+			// Track if we found any issues
+			hasIssues := false
+
 			// Always provide feedback via stderr
 			if len(errorIssues) > 0 {
 				output := e.formatLintOutput(filePath, errorIssues, true)
 				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
+				hasIssues = true
 			} else if len(warningIssues) > 0 {
 				output := e.formatLintOutput(filePath, warningIssues, false)
 				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
+				hasIssues = true
 			} else {
 				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: 👉 Style clean. Continue with your task.\n")
 			}
@@ -163,10 +168,19 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 			if strings.HasSuffix(filePath, ".go") && !strings.HasSuffix(filePath, "_test.go") {
 				e.checkTestFile(ctx, filePath)
 			}
+
+			// Return a response that will trigger exit code 1 if there are issues
+			// This makes the output visible while still being non-blocking
+			if hasIssues {
+				return &HookResponse{
+					Decision: "feedback",
+					Message:  "Linting issues found - see stderr for details",
+				}, nil
+			}
 		}
 	}
 
-	// Always return nil to not interfere with Claude's operation
+	// Return nil for clean files
 	return nil, nil
 }
 
