@@ -107,8 +107,8 @@ func (e *LintingRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *PreTool
 		}
 	}
 
-	// Write success message to stderr for user visibility
-	fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: 👉 Style clean. Continue with your task.\n")
+	// Write success message to stdout for exit code 0
+	fmt.Fprintf(os.Stdout, "\n> Write operation feedback:\n  - [ccfeedback]: ✅ Style clean. Continue with your task.\n")
 	return &HookResponse{Decision: "approve"}, nil
 }
 
@@ -116,11 +116,15 @@ func (e *LintingRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *PreTool
 func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostToolUseMessage) (*HookResponse, error) {
 	// Only check Write and Edit operations
 	if msg.ToolName != "Write" && msg.ToolName != "Edit" && msg.ToolName != "MultiEdit" {
+		// Show status for non-file operations on stdout (exit code 0)
+		fmt.Fprintf(os.Stdout, "\n> Tool execution feedback:\n  - [ccfeedback]: ℹ️  %s operation completed (no linting required)\n", msg.ToolName)
 		return nil, nil
 	}
 
 	// Skip if there was an error
 	if msg.ToolError != "" {
+		// Tool errors trigger exit code 1, shown on stderr
+		fmt.Fprintf(os.Stderr, "\n> Tool execution feedback:\n  - [ccfeedback]: ⚠️  Tool error: %s (skipping linting)\n", msg.ToolError)
 		return nil, nil
 	}
 
@@ -137,7 +141,12 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 	// Read the actual file from disk
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		// File might have been deleted or moved, that's ok
+		// File errors are informational, shown on stdout (exit code 0)
+		if os.IsNotExist(err) {
+			fmt.Fprintf(os.Stdout, "\n> Write operation feedback:\n  - [ccfeedback]: ⚠️  File not found: %s\n", filePath)
+		} else {
+			fmt.Fprintf(os.Stdout, "\n> Write operation feedback:\n  - [ccfeedback]: ⚠️  Cannot read file: %v\n", err)
+		}
 		return nil, nil
 	}
 
@@ -146,7 +155,7 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 		if linter.CanHandle(filePath) {
 			result, err := linter.Lint(ctx, filePath, content)
 			if err != nil {
-				// Log error but don't block
+				// Linting errors trigger exit code 1, shown on stderr
 				fmt.Fprintf(os.Stderr, "\n> Linting error for %s: %v\n", filePath, err)
 				continue
 			}
@@ -164,7 +173,7 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 			// Track if we found any issues
 			hasIssues := false
 
-			// Always provide feedback via stderr
+			// Issues trigger exit code 1, shown on stderr
 			if len(errorIssues) > 0 {
 				output := e.formatLintOutput(filePath, errorIssues, true)
 				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
@@ -174,7 +183,8 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
 				hasIssues = true
 			} else {
-				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: 👉 Style clean. Continue with your task.\n")
+				// Success shown on stdout (exit code 0)
+				fmt.Fprintf(os.Stdout, "\n> Write operation feedback:\n  - [ccfeedback]: ✅ Style clean. Continue with your task.\n")
 			}
 
 			// Check for associated test files if it's a Go file
@@ -187,7 +197,7 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 			if hasIssues {
 				return &HookResponse{
 					Decision: "approve",
-					Message:  "Linting issues found - see stderr for details",
+					Message:  "Linting issues found - see output for details",
 				}, nil
 			}
 		}
@@ -252,7 +262,9 @@ func (e *LintingRuleEngine) formatLintOutput(filePath string, issues []linters.I
 		output.WriteString(fmt.Sprintf("\n❌ Found %d blocking issue(s) - fix all above\n", issueCount))
 		output.WriteString("⛔ BLOCKING: Must fix ALL errors above before continuing")
 	} else {
-		output.WriteString("\n⚠️  Found formatting issues - consider running gofmt")
+		issueCount := len(issues)
+		output.WriteString(fmt.Sprintf("\n⚠️  Found %d warning(s) - consider fixing\n", issueCount))
+		output.WriteString("📝 NON-BLOCKING: Issues detected but you can continue")
 	}
 
 	return output.String()
@@ -276,6 +288,7 @@ func (e *LintingRuleEngine) checkTestFile(ctx context.Context, filePath string) 
 		if linter.CanHandle(testPath) {
 			result, err := linter.Lint(ctx, testPath, content)
 			if err != nil {
+				// Test file linting errors trigger exit code 1, shown on stderr
 				fmt.Fprintf(os.Stderr, "\n> Test file linting error for %s: %v\n", testPath, err)
 				continue
 			}
@@ -291,6 +304,7 @@ func (e *LintingRuleEngine) checkTestFile(ctx context.Context, filePath string) 
 					}
 				}
 
+				// Test file issues trigger exit code 1, shown on stderr
 				if len(errorIssues) > 0 {
 					output := e.formatLintOutput(testPath, errorIssues, true)
 					fmt.Fprintf(os.Stderr, "\n> Test file feedback:\n%s\n", output)

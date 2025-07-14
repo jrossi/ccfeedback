@@ -48,12 +48,27 @@ func main() {
 
 	// Execute
 	exitCode, err := executor.ExecuteWithExitCode(ctx)
+
+	// Always flush both stdout and stderr before exiting
+	os.Stdout.Sync()
+	os.Stderr.Sync()
+
 	if err != nil {
+		// Errors are non-blocking (exit 1) and shown on stderr
+		fmt.Fprintf(os.Stderr, "\n> Hook execution error:\n")
+		fmt.Fprintf(os.Stderr, "  - [ccfeedback]: ❌ %v\n", err)
 		if *debug {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "  - Debug: Full error: %v\n", err)
 		}
 		// Default to non-blocking error
 		os.Exit(1)
+	}
+
+	// Show status for successful exit codes in debug mode
+	if exitCode == 0 && *debug {
+		// Success messages go to stdout for exit code 0
+		fmt.Fprintf(os.Stdout, "\n> Hook execution completed:\n")
+		fmt.Fprintf(os.Stdout, "  - [ccfeedback]: ✅ Success (exit code 0)\n")
 	}
 
 	// Exit with the proper code
