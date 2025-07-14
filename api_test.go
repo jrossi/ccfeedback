@@ -76,10 +76,10 @@ func TestAPI_ProcessMessage(t *testing.T) {
 			HookEventName: PreToolUseEvent,
 		},
 		ToolName: "Write",
-		ToolInput: map[string]interface{}{
+		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "test.go",
 			"content":   "package main",
-		},
+		}),
 	}
 
 	msgData, err := json.Marshal(msg)
@@ -175,7 +175,7 @@ func TestAPI_ParseHookMessage(t *testing.T) {
 	}
 
 	if _, ok := msg.(*PreToolUseMessage); !ok {
-		t.Errorf("Expected PreToolUseMessage, got %T", msg)
+		t.Errorf("Expected *PreToolUseMessage, got %T", msg)
 	}
 }
 
@@ -383,10 +383,10 @@ func TestAPI_CompleteWorkflow(t *testing.T) {
 			HookEventName: PreToolUseEvent,
 		},
 		ToolName: "Write",
-		ToolInput: map[string]interface{}{
+		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "test.go",
 			"content":   "package main\n\nfunc main() {\n\tprintln(\"Hello\")\n}",
-		},
+		}),
 	}
 
 	// Marshal message

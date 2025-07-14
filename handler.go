@@ -70,23 +70,10 @@ func (h *Handler) ProcessInputWithResponse(ctx context.Context) (*HookResponse, 
 }
 
 // ProcessMessage handles a specific hook message
-func (h *Handler) ProcessMessage(ctx context.Context, msg interface{}) (*HookResponse, error) {
+func (h *Handler) ProcessMessage(ctx context.Context, msg HookMessage) (*HookResponse, error) {
 	h.mu.Lock()
 	// Store the message type before processing
-	switch msg.(type) {
-	case *PreToolUseMessage:
-		h.lastMessageType = PreToolUseEvent
-	case *PostToolUseMessage:
-		h.lastMessageType = PostToolUseEvent
-	case *NotificationMessage:
-		h.lastMessageType = NotificationEvent
-	case *StopMessage:
-		h.lastMessageType = StopEvent
-	case *SubagentStopMessage:
-		h.lastMessageType = SubagentStopEvent
-	case *PreCompactMessage:
-		h.lastMessageType = PreCompactEvent
-	}
+	h.lastMessageType = msg.EventName()
 	h.mu.Unlock()
 
 	h.mu.RLock()

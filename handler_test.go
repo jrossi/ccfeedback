@@ -6,6 +6,14 @@ import (
 	"time"
 )
 
+// mockInvalidMessage is a test type that implements HookMessage for testing unknown message types
+type mockInvalidMessage struct {
+	BaseHookMessage
+}
+
+func (m mockInvalidMessage) GetBaseMessage() BaseHookMessage { return m.BaseHookMessage }
+func (m mockInvalidMessage) EventName() HookEventName        { return "InvalidEvent" }
+
 // MockRuleEngine implements RuleEngine for testing
 type MockRuleEngine struct {
 	preToolUseResponse   *HookResponse
@@ -56,7 +64,7 @@ func (m *MockRuleEngine) EvaluatePreCompact(ctx context.Context, msg *PreCompact
 func TestHandler_ProcessMessage(t *testing.T) {
 	tests := []struct {
 		name        string
-		message     interface{}
+		message     HookMessage
 		setupMock   func(*MockRuleEngine)
 		checkCalled func(*testing.T, *MockRuleEngine)
 		wantErr     bool
@@ -105,7 +113,7 @@ func TestHandler_ProcessMessage(t *testing.T) {
 		},
 		{
 			name:    "Unknown message type",
-			message: "invalid message type",
+			message: &mockInvalidMessage{},
 			setupMock: func(m *MockRuleEngine) {
 				// No setup needed
 			},

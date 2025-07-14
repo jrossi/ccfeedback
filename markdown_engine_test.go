@@ -85,10 +85,10 @@ This line has trailing whitespace.
 					HookEventName: PreToolUseEvent,
 				},
 				ToolName: tt.toolName,
-				ToolInput: map[string]interface{}{
+				ToolInput: testConvertToRawMessage(map[string]interface{}{
 					"file_path": tt.filePath,
 					"content":   tt.content,
-				},
+				}),
 			}
 
 			ctx := context.Background()
@@ -157,7 +157,7 @@ func TestLintingRuleEngine_MarkdownErrorHandling(t *testing.T) {
 					HookEventName: PreToolUseEvent,
 				},
 				ToolName:  "Write",
-				ToolInput: tt.input,
+				ToolInput: testConvertToRawMessage(tt.input),
 			}
 
 			ctx := context.Background()
@@ -201,10 +201,10 @@ Very long line that exceeds our 120 character limit and should trigger a line le
 			HookEventName: PreToolUseEvent,
 		},
 		ToolName: "Write",
-		ToolInput: map[string]interface{}{
+		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "format_test.md",
 			"content":   badMarkdown,
-		},
+		}),
 	}
 
 	ctx := context.Background()
@@ -253,10 +253,10 @@ Content here is properly formatted.`
 			HookEventName: PreToolUseEvent,
 		},
 		ToolName: "Write",
-		ToolInput: map[string]interface{}{
+		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "success_test.md",
 			"content":   goodMarkdown,
-		},
+		}),
 	}
 
 	ctx := context.Background()
@@ -285,10 +285,10 @@ func TestLintingRuleEngine_MarkdownPerformance(t *testing.T) {
 			HookEventName: PreToolUseEvent,
 		},
 		ToolName: "Write",
-		ToolInput: map[string]interface{}{
+		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "large_test.md",
 			"content":   largeContent,
-		},
+		}),
 	}
 
 	ctx := context.Background()
@@ -329,10 +329,10 @@ This is a test document for concurrent processing.
 					HookEventName: PreToolUseEvent,
 				},
 				ToolName: "Write",
-				ToolInput: map[string]interface{}{
+				ToolInput: testConvertToRawMessage(map[string]interface{}{
 					"file_path": "concurrent_test.md",
 					"content":   content,
-				},
+				}),
 			}
 
 			ctx := context.Background()
@@ -396,10 +396,10 @@ func TestLintingRuleEngine_MarkdownMixedWithGo(t *testing.T) {
 					HookEventName: PreToolUseEvent,
 				},
 				ToolName: "Write",
-				ToolInput: map[string]interface{}{
+				ToolInput: testConvertToRawMessage(map[string]interface{}{
 					"file_path": tt.filePath,
 					"content":   tt.content,
-				},
+				}),
 			}
 
 			ctx := context.Background()

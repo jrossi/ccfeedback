@@ -2,6 +2,7 @@ package ccfeedback
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -37,8 +38,12 @@ func (e *LintingRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *PreTool
 	}
 
 	// Extract file path from tool input
-	filePath, ok := msg.ToolInput["file_path"].(string)
-	if !ok {
+	filePathRaw, exists := msg.ToolInput["file_path"]
+	if !exists {
+		return &HookResponse{Decision: "approve"}, nil
+	}
+	var filePath string
+	if err := json.Unmarshal(filePathRaw, &filePath); err != nil {
 		return &HookResponse{Decision: "approve"}, nil
 	}
 
@@ -48,8 +53,12 @@ func (e *LintingRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *PreTool
 	}
 
 	// For Write operations, check the content
-	content, ok := msg.ToolInput["content"].(string)
-	if !ok {
+	contentRaw, exists := msg.ToolInput["content"]
+	if !exists {
+		return &HookResponse{Decision: "approve"}, nil
+	}
+	var content string
+	if err := json.Unmarshal(contentRaw, &content); err != nil {
 		return &HookResponse{Decision: "approve"}, nil
 	}
 
@@ -116,8 +125,12 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 	}
 
 	// Extract file path from tool input
-	filePath, ok := msg.ToolInput["file_path"].(string)
-	if !ok || filePath == "" {
+	filePathRaw, exists := msg.ToolInput["file_path"]
+	if !exists {
+		return nil, nil
+	}
+	var filePath string
+	if err := json.Unmarshal(filePathRaw, &filePath); err != nil || filePath == "" {
 		return nil, nil
 	}
 
@@ -173,7 +186,7 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 			// This makes the output visible while still being non-blocking
 			if hasIssues {
 				return &HookResponse{
-					Decision: "feedback",
+					Decision: "approve",
 					Message:  "Linting issues found - see stderr for details",
 				}, nil
 			}

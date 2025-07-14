@@ -18,7 +18,7 @@ func NewParser() *Parser {
 }
 
 // ParseHookMessage parses a generic hook message to determine its type
-func (p *Parser) ParseHookMessage(data []byte) (interface{}, error) {
+func (p *Parser) ParseHookMessage(data []byte) (HookMessage, error) {
 	// First, parse just the base message to get the event type
 	var base BaseHookMessage
 	if err := json.Unmarshal(data, &base); err != nil {
@@ -96,7 +96,7 @@ func NewStreamParser(reader io.Reader) *StreamParser {
 }
 
 // ParseNext parses the next message from the stream
-func (sp *StreamParser) ParseNext() (interface{}, error) {
+func (sp *StreamParser) ParseNext() (HookMessage, error) {
 	// Read raw message first to determine type
 	var raw json.RawMessage
 	if err := sp.decoder.Decode(&raw); err != nil {
@@ -110,8 +110,8 @@ func (sp *StreamParser) ParseNext() (interface{}, error) {
 
 // ParseMultiple parses multiple JSON objects from a byte slice
 // Useful for processing hook output that contains multiple JSON objects
-func (p *Parser) ParseMultiple(data []byte) ([]interface{}, error) {
-	var messages []interface{}
+func (p *Parser) ParseMultiple(data []byte) ([]HookMessage, error) {
+	var messages []HookMessage
 	decoder := json.NewDecoder(bytes.NewReader(data))
 
 	for decoder.More() {
@@ -142,7 +142,7 @@ func (p *Parser) MarshalHookResponse(response *HookResponse) ([]byte, error) {
 }
 
 // MarshalHookMessage serializes any hook message to JSON
-func (p *Parser) MarshalHookMessage(message interface{}) ([]byte, error) {
+func (p *Parser) MarshalHookMessage(message HookMessage) ([]byte, error) {
 	data, err := json.Marshal(message)
 	if err != nil {
 		return nil, err

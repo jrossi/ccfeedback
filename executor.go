@@ -1,6 +1,7 @@
 package ccfeedback
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -126,14 +127,22 @@ func NewHookRunner(timeout time.Duration) *HookRunner {
 
 // RunHook executes an external hook program
 func (r *HookRunner) RunHook(ctx context.Context, hookPath string, input []byte) ([]byte, error) {
-	// Create command
-	cmd := exec.CommandContext(ctx, hookPath)
+	// Create command with timeout context
+	timeoutCtx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
 
-	// Set up stdin
+	cmd := exec.CommandContext(timeoutCtx, hookPath)
+
+	// Set up pipes
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create stdin pipe: %w", err)
 	}
+
+	// Capture stdout and stderr
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	// Start the command
 	if err := cmd.Start(); err != nil {
@@ -146,35 +155,20 @@ func (r *HookRunner) RunHook(ctx context.Context, hookPath string, input []byte)
 		_, _ = stdin.Write(input)
 	}()
 
-	// Wait for completion with timeout
-	done := make(chan error, 1)
-	go func() {
-		done <- cmd.Wait()
-	}()
+	// Wait for completion
+	err = cmd.Wait()
 
-	select {
-	case <-ctx.Done():
-		_ = cmd.Process.Kill()
-		return nil, ctx.Err()
-	case err := <-done:
-		if err != nil {
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				// Return stderr for exit code 2
-				if exitErr.ExitCode() == int(ExitBlocking) {
-					return exitErr.Stderr, nil
-				}
-			}
-			return nil, fmt.Errorf("hook execution failed: %w", err)
-		}
-	}
-
-	// Get stdout
-	output, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get output: %w", err)
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			// Return stderr for exit code 2
+			if exitErr.ExitCode() == int(ExitBlocking) {
+				return stderr.Bytes(), nil
+			}
+		}
+		return nil, fmt.Errorf("hook execution failed: %w", err)
 	}
 
-	return output, nil
+	return stdout.Bytes(), nil
 }
 
 // ChainExecutor allows chaining multiple rule engines in sequence

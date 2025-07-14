@@ -86,9 +86,16 @@ func (l *MarkdownLinter) Lint(_ context.Context, filePath string, content []byte
 	// Extract front matter if present
 	frontMatterData := frontmatter.Get(parserCtx)
 	if frontMatterData != nil {
-		// Validate front matter against schema
-		if schemaIssues := l.validateFrontMatter(filePath, frontMatterData); len(schemaIssues) > 0 {
-			result.Issues = append(result.Issues, schemaIssues...)
+		// Convert to our concrete FrontMatter type
+		var fm FrontMatter
+		if err := frontMatterData.Decode(&fm); err != nil {
+			// If decode fails, just skip validation
+			// This could happen with non-standard front matter
+		} else {
+			// Validate front matter against schema
+			if schemaIssues := l.validateFrontMatter(filePath, &fm); len(schemaIssues) > 0 {
+				result.Issues = append(result.Issues, schemaIssues...)
+			}
 		}
 	}
 
@@ -129,8 +136,18 @@ func (l *MarkdownLinter) Lint(_ context.Context, filePath string, content []byte
 	return result, nil
 }
 
+// FrontMatter represents structured front matter data
+type FrontMatter struct {
+	Title       string            `yaml:"title" json:"title"`
+	Date        string            `yaml:"date" json:"date"`
+	Tags        []string          `yaml:"tags" json:"tags"`
+	Author      string            `yaml:"author" json:"author"`
+	Description string            `yaml:"description" json:"description"`
+	Metadata    map[string]string `yaml:",inline" json:"-"`
+}
+
 // validateFrontMatter validates front matter against JSON schemas
-func (l *MarkdownLinter) validateFrontMatter(_ string, _ interface{}) []Issue {
+func (l *MarkdownLinter) validateFrontMatter(format string, data *FrontMatter) []Issue {
 	// For now, just validate that front matter is well-formed
 	// TODO: Add JSON schema validation when schemas are configured
 	return []Issue{}

@@ -2,6 +2,7 @@ package ccfeedback
 
 import (
 	"bytes"
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -58,8 +59,11 @@ func TestParseHookMessage(t *testing.T) {
 				if msg.ToolName != "Read" {
 					t.Errorf("ToolName = %v, want %v", msg.ToolName, "Read")
 				}
-				if msg.ToolOutput != "file contents" {
-					t.Errorf("ToolOutput = %v, want %v", msg.ToolOutput, "file contents")
+				var output string
+				if err := json.Unmarshal(msg.ToolOutput, &output); err != nil {
+					t.Errorf("Failed to unmarshal ToolOutput: %v", err)
+				} else if output != "file contents" {
+					t.Errorf("ToolOutput = %v, want %v", output, "file contents")
 				}
 			},
 		},

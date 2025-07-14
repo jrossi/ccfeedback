@@ -172,7 +172,7 @@ func TestParser_MarshalHookMessage(t *testing.T) {
 
 	tests := []struct {
 		name string
-		msg  interface{}
+		msg  HookMessage
 	}{
 		{
 			name: "pre_tool_use_message",
@@ -182,10 +182,10 @@ func TestParser_MarshalHookMessage(t *testing.T) {
 					HookEventName: PreToolUseEvent,
 				},
 				ToolName: "Write",
-				ToolInput: map[string]interface{}{
+				ToolInput: testConvertToRawMessage(map[string]interface{}{
 					"file_path": "test.go",
 					"content":   "package main",
-				},
+				}),
 			},
 		},
 		{
@@ -197,14 +197,6 @@ func TestParser_MarshalHookMessage(t *testing.T) {
 				},
 				NotificationType: "info",
 				Message:          "Test notification",
-			},
-		},
-		{
-			name: "hook_response",
-			msg: &HookResponse{
-				Decision: "block",
-				Reason:   "Linting failed",
-				Message:  "Found errors",
 			},
 		},
 	}
@@ -380,9 +372,12 @@ func TestParser_LargeMessages(t *testing.T) {
 
 	// Verify content was preserved
 	if preMsg, ok := parsed.(*PreToolUseMessage); ok {
-		if content, ok := preMsg.ToolInput["content"].(string); ok {
-			if len(content) != len(largeContent) {
-				t.Errorf("Content length mismatch: got %d, want %d", len(content), len(largeContent))
+		if contentRaw, exists := preMsg.ToolInput["content"]; exists {
+			var content string
+			if err := json.Unmarshal(contentRaw, &content); err == nil {
+				if len(content) != len(largeContent) {
+					t.Errorf("Content length mismatch: got %d, want %d", len(content), len(largeContent))
+				}
 			}
 		}
 	}

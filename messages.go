@@ -1,5 +1,13 @@
 package ccfeedback
 
+import "encoding/json"
+
+// HookMessage is the interface implemented by all hook message types
+type HookMessage interface {
+	GetBaseMessage() BaseHookMessage
+	EventName() HookEventName
+}
+
 // HookEventName represents the type of hook event
 type HookEventName string
 
@@ -23,18 +31,24 @@ type BaseHookMessage struct {
 // PreToolUseMessage is sent before a tool is executed
 type PreToolUseMessage struct {
 	BaseHookMessage
-	ToolName  string                 `json:"tool_name"`
-	ToolInput map[string]interface{} `json:"tool_input"`
+	ToolName  string                     `json:"tool_name"`
+	ToolInput map[string]json.RawMessage `json:"tool_input"`
 }
+
+func (m PreToolUseMessage) GetBaseMessage() BaseHookMessage { return m.BaseHookMessage }
+func (m PreToolUseMessage) EventName() HookEventName        { return PreToolUseEvent }
 
 // PostToolUseMessage is sent after a tool has been executed
 type PostToolUseMessage struct {
 	BaseHookMessage
-	ToolName   string                 `json:"tool_name"`
-	ToolInput  map[string]interface{} `json:"tool_input"`
-	ToolOutput interface{}            `json:"tool_output,omitempty"`
-	ToolError  string                 `json:"tool_error,omitempty"`
+	ToolName   string                     `json:"tool_name"`
+	ToolInput  map[string]json.RawMessage `json:"tool_input"`
+	ToolOutput json.RawMessage            `json:"tool_output,omitempty"`
+	ToolError  string                     `json:"tool_error,omitempty"`
 }
+
+func (m PostToolUseMessage) GetBaseMessage() BaseHookMessage { return m.BaseHookMessage }
+func (m PostToolUseMessage) EventName() HookEventName        { return PostToolUseEvent }
 
 // NotificationMessage is sent for system notifications
 type NotificationMessage struct {
@@ -43,12 +57,18 @@ type NotificationMessage struct {
 	Message          string `json:"message"`
 }
 
+func (m NotificationMessage) GetBaseMessage() BaseHookMessage { return m.BaseHookMessage }
+func (m NotificationMessage) EventName() HookEventName        { return NotificationEvent }
+
 // StopMessage is sent when the main agent finishes
 type StopMessage struct {
 	BaseHookMessage
 	Reason       string `json:"reason,omitempty"`
 	FinalMessage string `json:"final_message,omitempty"`
 }
+
+func (m StopMessage) GetBaseMessage() BaseHookMessage { return m.BaseHookMessage }
+func (m StopMessage) EventName() HookEventName        { return StopEvent }
 
 // SubagentStopMessage is sent when a subagent completes
 type SubagentStopMessage struct {
@@ -58,12 +78,18 @@ type SubagentStopMessage struct {
 	Result       string `json:"result,omitempty"`
 }
 
+func (m SubagentStopMessage) GetBaseMessage() BaseHookMessage { return m.BaseHookMessage }
+func (m SubagentStopMessage) EventName() HookEventName        { return SubagentStopEvent }
+
 // PreCompactMessage is sent before context compression
 type PreCompactMessage struct {
 	BaseHookMessage
 	CurrentTokens int `json:"current_tokens"`
 	TargetTokens  int `json:"target_tokens"`
 }
+
+func (m PreCompactMessage) GetBaseMessage() BaseHookMessage { return m.BaseHookMessage }
+func (m PreCompactMessage) EventName() HookEventName        { return PreCompactEvent }
 
 // HookResponse represents the response from a hook
 type HookResponse struct {

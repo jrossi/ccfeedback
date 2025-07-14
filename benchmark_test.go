@@ -19,10 +19,10 @@ func BenchmarkHandler_ProcessMessage(b *testing.B) {
 			HookEventName:  PreToolUseEvent,
 		},
 		ToolName: "Write",
-		ToolInput: map[string]interface{}{
+		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "/test/file.txt",
 			"content":   "benchmark content",
-		},
+		}),
 	}
 
 	b.ResetTimer()
@@ -46,10 +46,10 @@ func BenchmarkRuleEngine_EvaluatePreToolUse(b *testing.B) {
 			HookEventName:  PreToolUseEvent,
 		},
 		ToolName: "Write",
-		ToolInput: map[string]interface{}{
+		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "/test/file.txt",
 			"content":   "benchmark content",
-		},
+		}),
 	}
 
 	b.ResetTimer()
@@ -79,10 +79,10 @@ func BenchmarkCompositeRuleEngine(b *testing.B) {
 			HookEventName:  PreToolUseEvent,
 		},
 		ToolName: "Write",
-		ToolInput: map[string]interface{}{
+		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "/test/file.txt",
 			"content":   "benchmark content",
-		},
+		}),
 	}
 
 	b.ResetTimer()
@@ -203,10 +203,10 @@ func BenchmarkHandler_ProcessMessage_Parallel(b *testing.B) {
 			HookEventName:  PreToolUseEvent,
 		},
 		ToolName: "Write",
-		ToolInput: map[string]interface{}{
+		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "/test/file.txt",
 			"content":   "benchmark content",
-		},
+		}),
 	}
 
 	b.ResetTimer()

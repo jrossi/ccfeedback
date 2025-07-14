@@ -7,6 +7,14 @@ import (
 	"testing"
 )
 
+// mockUnknownMessage is a test type that implements HookMessage but isn't recognized
+type mockUnknownMessage struct {
+	BaseHookMessage
+}
+
+func (m mockUnknownMessage) GetBaseMessage() BaseHookMessage { return m.BaseHookMessage }
+func (m mockUnknownMessage) EventName() HookEventName        { return "UnknownEvent" }
+
 func TestHandler_ProcessInput(t *testing.T) {
 	// Save original stdin
 	oldStdin := os.Stdin
@@ -272,7 +280,7 @@ func TestHandler_ProcessMessage_Errors(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		msg     interface{}
+		msg     HookMessage
 		wantErr string
 	}{
 		{
@@ -307,7 +315,7 @@ func TestHandler_ProcessMessage_Errors(t *testing.T) {
 		},
 		{
 			name:    "unknown_message_type",
-			msg:     "unknown type",
+			msg:     &mockUnknownMessage{},
 			wantErr: "unknown message type",
 		},
 	}

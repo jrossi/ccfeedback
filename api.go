@@ -56,7 +56,7 @@ func (a *API) GetRegistry() *Registry {
 }
 
 // ParseHookMessage parses a hook message from JSON
-func (a *API) ParseHookMessage(data []byte) (interface{}, error) {
+func (a *API) ParseHookMessage(data []byte) (HookMessage, error) {
 	return a.parser.ParseHookMessage(data)
 }
 

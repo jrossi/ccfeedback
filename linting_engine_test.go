@@ -140,7 +140,7 @@ func TestLintingRuleEngine_EvaluatePreToolUse(t *testing.T) {
 					HookEventName: PreToolUseEvent,
 				},
 				ToolName:  tt.toolName,
-				ToolInput: tt.input,
+				ToolInput: testConvertToRawMessage(tt.input),
 			}
 
 			ctx := context.Background()
