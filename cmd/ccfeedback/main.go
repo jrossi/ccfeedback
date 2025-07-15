@@ -156,6 +156,11 @@ func main() {
 
 // showActionsForFile displays which configuration rules would apply to the given file
 func showActionsForFile(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, debug bool) error {
+	// Check if file exists
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return fmt.Errorf("file does not exist: %s", filePath)
+	}
+
 	// Get the absolute path
 	absPath, err := filepath.Abs(filePath)
 	if err != nil {

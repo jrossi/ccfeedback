@@ -20,7 +20,8 @@ type JavaScriptLinter struct {
 	config       *JavaScriptConfig
 	cacheManager *toolcache.CacheManager
 
-	// Tool selection cache
+	// Tool selection cache (protected by mutex)
+	mu           sync.RWMutex
 	selectedTool string
 	toolPath     string
 
@@ -280,7 +281,11 @@ func (l *JavaScriptLinter) LintBatch(ctx context.Context, files map[string][]byt
 // ensureToolReady ensures a linting tool is discovered and ready to use
 func (l *JavaScriptLinter) ensureToolReady(filePath string) error {
 	// Check if we already have a tool selected
-	if l.selectedTool != "" && l.toolPath != "" {
+	l.mu.RLock()
+	hasToolSelected := l.selectedTool != "" && l.toolPath != ""
+	l.mu.RUnlock()
+
+	if hasToolSelected {
 		return nil
 	}
 
@@ -295,52 +300,58 @@ func (l *JavaScriptLinter) ensureToolReady(filePath string) error {
 
 // setupForcedTool configures the linter to use a specific forced tool
 func (l *JavaScriptLinter) setupForcedTool(toolName string) error {
+	var toolPath string
+
 	switch toolName {
 	case "biome":
 		if l.config.BiomePath != nil {
-			l.toolPath = *l.config.BiomePath
+			toolPath = *l.config.BiomePath
 		} else {
 			tool, err := l.cacheManager.DiscoverTool("javascript", "biome")
 			if err != nil || !tool.Available {
 				return fmt.Errorf("forced tool 'biome' not available")
 			}
-			l.toolPath = tool.Path
+			toolPath = tool.Path
 		}
 	case "oxlint":
 		if l.config.OxlintPath != nil {
-			l.toolPath = *l.config.OxlintPath
+			toolPath = *l.config.OxlintPath
 		} else {
 			tool, err := l.cacheManager.DiscoverTool("javascript", "oxlint")
 			if err != nil || !tool.Available {
 				return fmt.Errorf("forced tool 'oxlint' not available")
 			}
-			l.toolPath = tool.Path
+			toolPath = tool.Path
 		}
 	case "eslint":
 		if l.config.ESLintPath != nil {
-			l.toolPath = *l.config.ESLintPath
+			toolPath = *l.config.ESLintPath
 		} else {
 			tool, err := l.cacheManager.DiscoverTool("javascript", "eslint")
 			if err != nil || !tool.Available {
 				return fmt.Errorf("forced tool 'eslint' not available")
 			}
-			l.toolPath = tool.Path
+			toolPath = tool.Path
 		}
 	case "node":
 		if l.config.NodePath != nil {
-			l.toolPath = *l.config.NodePath
+			toolPath = *l.config.NodePath
 		} else {
 			tool, err := l.cacheManager.DiscoverTool("javascript", "node")
 			if err != nil || !tool.Available {
 				return fmt.Errorf("forced tool 'node' not available")
 			}
-			l.toolPath = tool.Path
+			toolPath = tool.Path
 		}
 	default:
 		return fmt.Errorf("unknown forced tool: %s", toolName)
 	}
 
+	l.mu.Lock()
 	l.selectedTool = toolName
+	l.toolPath = toolPath
+	l.mu.Unlock()
+
 	return nil
 }
 
@@ -359,8 +370,10 @@ func (l *JavaScriptLinter) discoverAndSelectTool(filePath string) error {
 		}
 
 		if tool.Available {
+			l.mu.Lock()
 			l.selectedTool = toolName
 			l.toolPath = tool.Path
+			l.mu.Unlock()
 			return nil
 		}
 	}
@@ -368,9 +381,20 @@ func (l *JavaScriptLinter) discoverAndSelectTool(filePath string) error {
 	return fmt.Errorf("no JavaScript linting tools available")
 }
 
+// getToolPath safely returns the current tool path
+func (l *JavaScriptLinter) getToolPath() string {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return l.toolPath
+}
+
 // lintWithTool performs linting using the selected tool
 func (l *JavaScriptLinter) lintWithTool(ctx context.Context, filePath string, content []byte) (*linters.LintResult, error) {
-	switch l.selectedTool {
+	l.mu.RLock()
+	selectedTool := l.selectedTool
+	l.mu.RUnlock()
+
+	switch selectedTool {
 	case "biome":
 		return l.lintWithBiome(ctx, filePath, content)
 	case "oxlint":
@@ -401,7 +425,7 @@ func (l *JavaScriptLinter) lintWithBiome(ctx context.Context, filePath string, c
 
 	// Run biome check
 	// #nosec G204 - toolPath is validated through cache discovery
-	cmd := exec.CommandContext(ctx, l.toolPath, "check", "--reporter=json", filePath)
+	cmd := exec.CommandContext(ctx, l.getToolPath(), "check", "--reporter=json", filePath)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -469,7 +493,7 @@ func (l *JavaScriptLinter) lintWithOxlint(ctx context.Context, filePath string, 
 
 	// Run oxlint
 	// #nosec G204 - toolPath is validated through cache discovery
-	cmd := exec.CommandContext(ctx, l.toolPath, "--format=json", filePath)
+	cmd := exec.CommandContext(ctx, l.getToolPath(), "--format=json", filePath)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -536,7 +560,7 @@ func (l *JavaScriptLinter) lintWithESLint(ctx context.Context, filePath string, 
 
 	// Run ESLint
 	// #nosec G204 - toolPath is validated through cache discovery
-	cmd := exec.CommandContext(ctx, l.toolPath, "--format=json", filePath)
+	cmd := exec.CommandContext(ctx, l.getToolPath(), "--format=json", filePath)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -603,7 +627,7 @@ func (l *JavaScriptLinter) lintWithNode(ctx context.Context, filePath string, co
 
 	// Use Node.js to check syntax
 	// #nosec G204 - toolPath is validated through cache discovery
-	cmd := exec.CommandContext(ctx, l.toolPath, "-c", string(content))
+	cmd := exec.CommandContext(ctx, l.getToolPath(), "-c", string(content))
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -641,8 +665,10 @@ func (l *JavaScriptLinter) lintWithoutCache(ctx context.Context, filePath string
 	tools := []string{"biome", "oxlint", "eslint", "node"}
 	for _, tool := range tools {
 		if path, err := exec.LookPath(tool); err == nil {
+			l.mu.Lock()
 			l.selectedTool = tool
 			l.toolPath = path
+			l.mu.Unlock()
 			return l.lintWithTool(ctx, filePath, content)
 		}
 	}

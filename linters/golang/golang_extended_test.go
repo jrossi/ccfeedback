@@ -304,8 +304,10 @@ func TestGoLinter_runTests_NoTests(t *testing.T) {
 	goFile := filepath.Join(tmpDir, "main.go")
 	goContent := `package main
 
+import "fmt"
+
 func main() {
-	println("Hello")
+	fmt.Println("Hello")
 }
 `
 	if err := os.WriteFile(goFile, []byte(goContent), 0644); err != nil {
@@ -391,8 +393,10 @@ enable = ["gofmt"]
 			goFile := filepath.Join(tmpDir, "main.go")
 			goContent := `package main
 
+import "fmt"
+
 func main() {
-    println("Hello")
+	fmt.Println("Hello")
 }
 `
 			if err := os.WriteFile(goFile, []byte(goContent), 0644); err != nil {

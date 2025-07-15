@@ -385,7 +385,7 @@ func TestAPI_CompleteWorkflow(t *testing.T) {
 		ToolName: "Write",
 		ToolInput: testConvertToRawMessage(map[string]interface{}{
 			"file_path": "test.go",
-			"content":   "package main\n\nfunc main() {\n\tprintln(\"Hello\")\n}",
+			"content":   "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"Hello\")\n}",
 		}),
 	}
 
