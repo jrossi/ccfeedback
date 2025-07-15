@@ -26,9 +26,9 @@ and CLI interfaces.
 
 Get started with CCFeedback in minutes:
 
-1. **[Install CCFeedback](/docs/installation/)** - Multiple installation options
-2. **[Quick Start Guide](/docs/quickstart/)** - Basic usage examples
-3. **[Configuration](/docs/configuration/)** - Set up your linting rules
+1. **[Install CCFeedback](/ccfeedback/docs/installation/)** - Multiple installation options
+2. **[Quick Start Guide](/ccfeedback/docs/quickstart/)** - Basic usage examples
+3. **[Configuration](/ccfeedback/docs/configuration/)** - Set up your linting rules
 
 ## Use Cases
 
@@ -45,6 +45,6 @@ CCFeedback is built for speed:
 - Go linting: ~100ms enhanced / ~4μs fallback
 - Full pipeline: ~22ns handler processing
 
-[Get Started](/docs/installation/){.btn .btn-primary .btn-lg}
-[View on GitHub](https://github.com/jrossi-claude/ccfeedback){.btn .btn-secondary .btn-lg}<!-- Trigger GitHub Pages deployment -->
+[Get Started](/ccfeedback/docs/installation/){.btn .btn-primary .btn-lg}
+[View on GitHub](https://github.com/jrossi/ccfeedback){.btn .btn-secondary .btn-lg}
 <!-- Re-trigger deployment -->

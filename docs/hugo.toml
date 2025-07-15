@@ -1,10 +1,10 @@
-baseURL = 'https://jrossi-claude.github.io/ccfeedback/'
+baseURL = 'http://jeremyrossi.com/ccfeedback/'
 languageCode = 'en-us'
 title = 'CCFeedback Documentation'
 theme = 'docsy'
 
 [params]
-github_repo = 'https://github.com/jrossi-claude/ccfeedback'
+github_repo = 'https://github.com/jrossi/ccfeedback'
 github_branch = 'main'
 
 [markup]
@@ -15,17 +15,17 @@ github_branch = 'main'
 [menu]
   [[menu.main]]
     name = "Documentation"
-    url = "/docs/"
+    url = "/ccfeedback/docs/"
     weight = 10
   [[menu.main]]
     name = "CLI Reference"  
-    url = "/docs/cli/"
+    url = "/ccfeedback/docs/cli/"
     weight = 20
   [[menu.main]]
     name = "Library API"
-    url = "/docs/library/"
+    url = "/ccfeedback/docs/library/"
     weight = 30
   [[menu.main]]
     name = "GitHub"
-    url = "https://github.com/jrossi-claude/ccfeedback"
+    url = "https://github.com/jrossi/ccfeedback"
     weight = 50
