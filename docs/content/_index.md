@@ -46,4 +46,4 @@ CCFeedback is built for speed:
 - Full pipeline: ~22ns handler processing
 
 [Get Started](/docs/installation/){.btn .btn-primary .btn-lg}
-[View on GitHub](https://github.com/jrossi-claude/ccfeedback){.btn .btn-secondary .btn-lg}
+[View on GitHub](https://github.com/jrossi-claude/ccfeedback){.btn .btn-secondary .btn-lg}<!-- Trigger GitHub Pages deployment -->
