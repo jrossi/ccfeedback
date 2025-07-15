@@ -1,13 +1,15 @@
-package ccfeedback
+package integration_test
 
 import (
 	"context"
-	"strings"
+	"fmt"
 	"testing"
+
+	"github.com/jrossi/ccfeedback"
 )
 
-func TestLintingRuleEngine_MarkdownIntegration(t *testing.T) {
-	engine := NewLintingRuleEngine()
+func TestLintingRuleEngine_GolangIntegration(t *testing.T) {
+	engine := ccfeedback.NewLintingRuleEngine()
 
 	tests := []struct {
 		name           string
@@ -18,61 +20,54 @@ func TestLintingRuleEngine_MarkdownIntegration(t *testing.T) {
 		expectApproval bool
 	}{
 		{
-			name:     "good_markdown_write",
+			name:     "good_golang_write",
 			toolName: "Write",
-			filePath: "good.md",
-			content: `# Good Document
+			filePath: "good.go",
+			content: `package main
 
-This is well-formatted markdown.
+import "fmt"
 
-## Section
-
-- Item 1
-  - Nested item
-- Item 2
-
-` + "```go" + `
-fmt.Println("Hello")
-` + "```",
+func main() {
+	fmt.Println("Hello, World!")
+}`,
 			expectBlocking: false,
 			expectApproval: true,
 		},
 		{
-			name:     "bad_markdown_with_errors",
+			name:     "bad_golang_formatting",
 			toolName: "Write",
-			filePath: "bad.md",
-			content: `# Bad Document
+			filePath: "bad.go",
+			content: `package main
 
-This line has trailing whitespace.   
+import "fmt"
 
-##### Skipped heading levels
-
-- Item
-   - Wrong indentation`,
-			expectBlocking: true,
-			expectApproval: false,
+func main(){
+fmt.Println("Bad formatting")
+}`,
+			expectBlocking: false, // Formatting issues are warnings, not blocking
+			expectApproval: true,
 		},
 		{
-			name:           "markdown_edit_operation",
+			name:           "golang_edit_operation",
 			toolName:       "Edit",
-			filePath:       "test.md",
-			content:        "# Simple edit",
-			expectBlocking: false,
-			expectApproval: true,
-		},
-		{
-			name:           "non_markdown_file",
-			toolName:       "Write",
 			filePath:       "test.go",
-			content:        "package main\n\nfunc main() {\n\tfmt.Println(\"Hello\")\n}",
+			content:        "package main\n\nfunc main() {}",
 			expectBlocking: false,
 			expectApproval: true,
 		},
 		{
-			name:           "markdown_multiedit",
+			name:           "non_go_file",
+			toolName:       "Write",
+			filePath:       "test.md",
+			content:        "# Test Document\n\nContent here.",
+			expectBlocking: false,
+			expectApproval: true,
+		},
+		{
+			name:           "golang_multiedit",
 			toolName:       "MultiEdit",
-			filePath:       "multi.md",
-			content:        "# Multi Edit Test\n\nContent here.",
+			filePath:       "multi.go",
+			content:        "package main\n\nfunc test() {}",
 			expectBlocking: false,
 			expectApproval: true,
 		},
@@ -80,9 +75,9 @@ This line has trailing whitespace.
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := &PreToolUseMessage{
-				BaseHookMessage: BaseHookMessage{
-					HookEventName: PreToolUseEvent,
+			msg := &ccfeedback.PreToolUseMessage{
+				BaseHookMessage: ccfeedback.BaseHookMessage{
+					HookEventName: ccfeedback.PreToolUseEvent,
 				},
 				ToolName: tt.toolName,
 				ToolInput: testConvertToRawMessage(map[string]interface{}{
@@ -110,8 +105,8 @@ This line has trailing whitespace.
 	}
 }
 
-func TestLintingRuleEngine_MarkdownErrorHandling(t *testing.T) {
-	engine := NewLintingRuleEngine()
+func TestLintingRuleEngine_GolangErrorHandling(t *testing.T) {
+	engine := ccfeedback.NewLintingRuleEngine()
 
 	tests := []struct {
 		name    string
@@ -121,21 +116,21 @@ func TestLintingRuleEngine_MarkdownErrorHandling(t *testing.T) {
 		{
 			name: "missing_file_path",
 			input: map[string]interface{}{
-				"content": "# Test",
+				"content": "package main",
 			},
 			wantErr: false, // Should not error, just skip
 		},
 		{
 			name: "missing_content",
 			input: map[string]interface{}{
-				"file_path": "test.md",
+				"file_path": "test.go",
 			},
 			wantErr: false, // Should not error, just skip
 		},
 		{
 			name: "invalid_content_type",
 			input: map[string]interface{}{
-				"file_path": "test.md",
+				"file_path": "test.go",
 				"content":   123, // Not a string
 			},
 			wantErr: false, // Should not error, just skip
@@ -143,7 +138,7 @@ func TestLintingRuleEngine_MarkdownErrorHandling(t *testing.T) {
 		{
 			name: "empty_content",
 			input: map[string]interface{}{
-				"file_path": "test.md",
+				"file_path": "test.go",
 				"content":   "",
 			},
 			wantErr: false,
@@ -152,9 +147,9 @@ func TestLintingRuleEngine_MarkdownErrorHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := &PreToolUseMessage{
-				BaseHookMessage: BaseHookMessage{
-					HookEventName: PreToolUseEvent,
+			msg := &ccfeedback.PreToolUseMessage{
+				BaseHookMessage: ccfeedback.BaseHookMessage{
+					HookEventName: ccfeedback.PreToolUseEvent,
 				},
 				ToolName:  "Write",
 				ToolInput: testConvertToRawMessage(tt.input),
@@ -178,32 +173,28 @@ func TestLintingRuleEngine_MarkdownErrorHandling(t *testing.T) {
 	}
 }
 
-func TestLintingRuleEngine_MarkdownOutputFormatting(t *testing.T) {
-	engine := NewLintingRuleEngine()
+func TestLintingRuleEngine_GolangOutputFormatting(t *testing.T) {
+	engine := ccfeedback.NewLintingRuleEngine()
 
-	badMarkdown := `# Bad Document
+	badGolang := `package main
 
-Line with trailing spaces.   
+import "fmt"
 
-##### Skipped levels
+func main(){
+fmt.Println("Bad formatting")
+if true{
+fmt.Println("More bad formatting")
+}
+}`
 
-- Item
-   - Wrong indent
-
-` + "```" + `
-no language
-` + "```" + `
-
-Very long line that exceeds our 120 character limit and should trigger a line length warning from our linter implementation.`
-
-	msg := &PreToolUseMessage{
-		BaseHookMessage: BaseHookMessage{
-			HookEventName: PreToolUseEvent,
+	msg := &ccfeedback.PreToolUseMessage{
+		BaseHookMessage: ccfeedback.BaseHookMessage{
+			HookEventName: ccfeedback.PreToolUseEvent,
 		},
 		ToolName: "Write",
 		ToolInput: testConvertToRawMessage(map[string]interface{}{
-			"file_path": "format_test.md",
-			"content":   badMarkdown,
+			"file_path": "format_test.go",
+			"content":   badGolang,
 		}),
 	}
 
@@ -213,49 +204,45 @@ Very long line that exceeds our 120 character limit and should trigger a line le
 		t.Fatalf("EvaluatePreToolUse() error = %v", err)
 	}
 
-	// Should block due to errors
-	if resp == nil || resp.Decision != "block" {
-		t.Errorf("Expected blocking response, got %v", resp)
+	// Should not block for formatting issues (they're warnings)
+	if resp == nil || resp.Decision != "approve" {
+		t.Errorf("Expected approval response for formatting issues, got %v", resp)
 	}
 
-	// Should have informative reason
-	if resp != nil && resp.Reason == "" {
-		t.Error("Expected reason in blocking response")
-	}
-
-	// Should mention multiple errors
-	if resp != nil && !strings.Contains(resp.Reason, "error") {
-		t.Errorf("Expected reason to mention errors, got: %s", resp.Reason)
+	// Should have informative reason about warnings
+	if resp != nil && resp.Message == "" {
+		t.Error("Expected message in response")
 	}
 }
 
-func TestLintingRuleEngine_MarkdownSuccessCase(t *testing.T) {
-	engine := NewLintingRuleEngine()
+func TestLintingRuleEngine_GolangSuccessCase(t *testing.T) {
+	engine := ccfeedback.NewLintingRuleEngine()
 
-	goodMarkdown := `# Good Document
+	goodGolang := `package main
 
-This is a well-formatted markdown document.
+import (
+	"context"
+	"fmt"
+)
 
-## Section
+// GoodFunction demonstrates proper Go code
+func GoodFunction(ctx context.Context, name string) error {
+	if name == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	
+	fmt.Printf("Hello, %s!\n", name)
+	return nil
+}`
 
-- Item 1
-  - Nested item
-- Item 2
-
-` + "```go" + `
-fmt.Println("Hello")
-` + "```" + `
-
-Content here is properly formatted.`
-
-	msg := &PreToolUseMessage{
-		BaseHookMessage: BaseHookMessage{
-			HookEventName: PreToolUseEvent,
+	msg := &ccfeedback.PreToolUseMessage{
+		BaseHookMessage: ccfeedback.BaseHookMessage{
+			HookEventName: ccfeedback.PreToolUseEvent,
 		},
 		ToolName: "Write",
 		ToolInput: testConvertToRawMessage(map[string]interface{}{
-			"file_path": "success_test.md",
-			"content":   goodMarkdown,
+			"file_path": "success_test.go",
+			"content":   goodGolang,
 		}),
 	}
 
@@ -265,28 +252,28 @@ Content here is properly formatted.`
 		t.Fatalf("EvaluatePreToolUse() error = %v", err)
 	}
 
-	// Should approve (might have warnings but no errors)
+	// Should approve
 	if resp == nil || resp.Decision != "approve" {
 		t.Errorf("Expected approval response, got %v", resp)
 	}
 }
 
-func TestLintingRuleEngine_MarkdownPerformance(t *testing.T) {
-	engine := NewLintingRuleEngine()
+func TestLintingRuleEngine_GolangPerformance(t *testing.T) {
+	engine := ccfeedback.NewLintingRuleEngine()
 
-	// Create large markdown content
-	largeContent := "# Performance Test\n\n"
+	// Create large Go content
+	largeContent := "package main\n\nimport \"fmt\"\n\n"
 	for i := 0; i < 1000; i++ {
-		largeContent += "## Section " + string(rune(i)) + "\n\nContent here.\n\n"
+		largeContent += fmt.Sprintf("func Function%d() {\n\tfmt.Println(\"Function %d\")\n}\n\n", i, i)
 	}
 
-	msg := &PreToolUseMessage{
-		BaseHookMessage: BaseHookMessage{
-			HookEventName: PreToolUseEvent,
+	msg := &ccfeedback.PreToolUseMessage{
+		BaseHookMessage: ccfeedback.BaseHookMessage{
+			HookEventName: ccfeedback.PreToolUseEvent,
 		},
 		ToolName: "Write",
 		ToolInput: testConvertToRawMessage(map[string]interface{}{
-			"file_path": "large_test.md",
+			"file_path": "large_test.go",
 			"content":   largeContent,
 		}),
 	}
@@ -302,21 +289,19 @@ func TestLintingRuleEngine_MarkdownPerformance(t *testing.T) {
 		t.Error("Expected response for large document")
 	}
 
-	t.Logf("Successfully processed %d bytes of markdown", len(largeContent))
+	t.Logf("Successfully processed %d bytes of Go code", len(largeContent))
 }
 
-func TestLintingRuleEngine_MarkdownConcurrency(t *testing.T) {
-	engine := NewLintingRuleEngine()
+func TestLintingRuleEngine_GolangConcurrency(t *testing.T) {
+	engine := ccfeedback.NewLintingRuleEngine()
 
-	content := `# Concurrent Test
+	content := `package main
 
-This is a test document for concurrent processing.
+import "fmt"
 
-## Section
-
-- Item 1
-  - Nested
-- Item 2`
+func main() {
+	fmt.Println("Concurrent test")
+}`
 
 	// Test concurrent requests
 	const numRequests = 50
@@ -324,13 +309,13 @@ This is a test document for concurrent processing.
 
 	for i := 0; i < numRequests; i++ {
 		go func(id int) {
-			msg := &PreToolUseMessage{
-				BaseHookMessage: BaseHookMessage{
-					HookEventName: PreToolUseEvent,
+			msg := &ccfeedback.PreToolUseMessage{
+				BaseHookMessage: ccfeedback.BaseHookMessage{
+					HookEventName: ccfeedback.PreToolUseEvent,
 				},
 				ToolName: "Write",
 				ToolInput: testConvertToRawMessage(map[string]interface{}{
-					"file_path": "concurrent_test.md",
+					"file_path": "concurrent_test.go",
 					"content":   content,
 				}),
 			}
@@ -349,8 +334,8 @@ This is a test document for concurrent processing.
 	}
 }
 
-func TestLintingRuleEngine_MarkdownMixedWithGo(t *testing.T) {
-	engine := NewLintingRuleEngine()
+func TestLintingRuleEngine_GolangWithMarkdown(t *testing.T) {
+	engine := ccfeedback.NewLintingRuleEngine()
 
 	tests := []struct {
 		name     string
@@ -374,16 +359,16 @@ func TestLintingRuleEngine_MarkdownMixedWithGo(t *testing.T) {
 			wantMd:   true,
 		},
 		{
-			name:     "readme_file",
-			filePath: "README.md",
-			content:  "# Project\n\nDescription here.",
+			name:     "go_mod_file",
+			filePath: "go.mod",
+			content:  "module test\n\ngo 1.21",
 			wantGo:   false,
-			wantMd:   true,
+			wantMd:   false,
 		},
 		{
 			name:     "other_file",
-			filePath: "config.json",
-			content:  `{"key": "value"}`,
+			filePath: "config.yaml",
+			content:  "key: value",
 			wantGo:   false,
 			wantMd:   false,
 		},
@@ -391,9 +376,9 @@ func TestLintingRuleEngine_MarkdownMixedWithGo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := &PreToolUseMessage{
-				BaseHookMessage: BaseHookMessage{
-					HookEventName: PreToolUseEvent,
+			msg := &ccfeedback.PreToolUseMessage{
+				BaseHookMessage: ccfeedback.BaseHookMessage{
+					HookEventName: ccfeedback.PreToolUseEvent,
 				},
 				ToolName: "Write",
 				ToolInput: testConvertToRawMessage(map[string]interface{}{
