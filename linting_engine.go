@@ -9,6 +9,7 @@ import (
 
 	"github.com/jrossi/ccfeedback/linters"
 	"github.com/jrossi/ccfeedback/linters/golang"
+	"github.com/jrossi/ccfeedback/linters/javascript"
 	jsonlinter "github.com/jrossi/ccfeedback/linters/json"
 	"github.com/jrossi/ccfeedback/linters/markdown"
 	"github.com/jrossi/ccfeedback/linters/python"
@@ -51,6 +52,7 @@ func NewLintingRuleEngineWithConfig(config LintingConfig) *LintingRuleEngine {
 	// Initialize linters with empty configs for now
 	// We'll update them when SetAppConfig is called
 	engine.linters = append(engine.linters, golang.NewGoLinter())
+	engine.linters = append(engine.linters, javascript.NewJavaScriptLinter())
 	engine.linters = append(engine.linters, jsonlinter.NewJSONLinter())
 	engine.linters = append(engine.linters, markdown.NewMarkdownLinter())
 	engine.linters = append(engine.linters, python.NewPythonLinter())
