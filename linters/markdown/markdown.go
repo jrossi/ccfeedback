@@ -1,4 +1,4 @@
-package linters
+package markdown
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/jrossi/ccfeedback/linters"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -26,7 +27,7 @@ type MarkdownLinter struct {
 
 // MarkdownRule defines the interface for markdown linting rules
 type MarkdownRule interface {
-	Check(doc ast.Node, source []byte, filePath string) []Issue
+	Check(doc ast.Node, source []byte, filePath string) []linters.Issue
 	Name() string
 }
 
@@ -72,10 +73,10 @@ func (l *MarkdownLinter) CanHandle(filePath string) bool {
 }
 
 // Lint performs comprehensive linting on a markdown file
-func (l *MarkdownLinter) Lint(_ context.Context, filePath string, content []byte) (*LintResult, error) {
-	result := &LintResult{
+func (l *MarkdownLinter) Lint(_ context.Context, filePath string, content []byte) (*linters.LintResult, error) {
+	result := &linters.LintResult{
 		Success: true,
-		Issues:  []Issue{},
+		Issues:  []linters.Issue{},
 	}
 
 	// Parse markdown with front matter
@@ -115,7 +116,7 @@ func (l *MarkdownLinter) Lint(_ context.Context, filePath string, content []byte
 
 	// Check if formatting changed (indicates formatting issues)
 	if !bytes.Equal(content, result.Formatted) {
-		result.Issues = append(result.Issues, Issue{
+		result.Issues = append(result.Issues, linters.Issue{
 			File:     filePath,
 			Line:     1,
 			Column:   1,
@@ -147,10 +148,10 @@ type FrontMatter struct {
 }
 
 // validateFrontMatter validates front matter against JSON schemas
-func (l *MarkdownLinter) validateFrontMatter(format string, data *FrontMatter) []Issue {
+func (l *MarkdownLinter) validateFrontMatter(format string, data *FrontMatter) []linters.Issue {
 	// For now, just validate that front matter is well-formed
 	// TODO: Add JSON schema validation when schemas are configured
-	return []Issue{}
+	return []linters.Issue{}
 }
 
 // HeadingHierarchyRule ensures proper heading level progression (H1 → H2 → H3)
@@ -160,8 +161,8 @@ func (r *HeadingHierarchyRule) Name() string {
 	return "heading-hierarchy"
 }
 
-func (r *HeadingHierarchyRule) Check(doc ast.Node, source []byte, filePath string) []Issue {
-	var issues []Issue
+func (r *HeadingHierarchyRule) Check(doc ast.Node, source []byte, filePath string) []linters.Issue {
+	var issues []linters.Issue
 	var lastLevel int
 	var hasH1 bool
 
@@ -169,7 +170,7 @@ func (r *HeadingHierarchyRule) Check(doc ast.Node, source []byte, filePath strin
 		if heading, ok := node.(*ast.Heading); ok && entering {
 			if heading.Level == 1 {
 				if hasH1 {
-					issues = append(issues, Issue{
+					issues = append(issues, linters.Issue{
 						File:     filePath,
 						Line:     getLineNumber(source, heading),
 						Column:   1,
@@ -182,7 +183,7 @@ func (r *HeadingHierarchyRule) Check(doc ast.Node, source []byte, filePath strin
 			}
 
 			if lastLevel > 0 && heading.Level > lastLevel+1 {
-				issues = append(issues, Issue{
+				issues = append(issues, linters.Issue{
 					File:     filePath,
 					Line:     getLineNumber(source, heading),
 					Column:   1,
@@ -206,8 +207,8 @@ func (r *ListIndentationRule) Name() string {
 	return "list-indentation"
 }
 
-func (r *ListIndentationRule) Check(_ ast.Node, source []byte, filePath string) []Issue {
-	var issues []Issue
+func (r *ListIndentationRule) Check(_ ast.Node, source []byte, filePath string) []linters.Issue {
+	var issues []linters.Issue
 	lines := strings.Split(string(source), "\n")
 
 	// Check list indentation using simple pattern matching
@@ -217,7 +218,7 @@ func (r *ListIndentationRule) Check(_ ast.Node, source []byte, filePath string) 
 		if matches := listPattern.FindStringSubmatch(line); matches != nil {
 			indent := len(matches[1])
 			if indent%2 != 0 {
-				issues = append(issues, Issue{
+				issues = append(issues, linters.Issue{
 					File:     filePath,
 					Line:     i + 1,
 					Column:   1,
@@ -239,13 +240,13 @@ func (r *CodeBlockRule) Name() string {
 	return "code-block-language"
 }
 
-func (r *CodeBlockRule) Check(doc ast.Node, source []byte, filePath string) []Issue {
-	var issues []Issue
+func (r *CodeBlockRule) Check(doc ast.Node, source []byte, filePath string) []linters.Issue {
+	var issues []linters.Issue
 
 	_ = ast.Walk(doc, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if codeBlock, ok := node.(*ast.FencedCodeBlock); ok && entering {
 			if codeBlock.Info == nil || codeBlock.Info.Value(source) == nil || len(codeBlock.Info.Value(source)) == 0 {
-				issues = append(issues, Issue{
+				issues = append(issues, linters.Issue{
 					File:     filePath,
 					Line:     getLineNumber(source, codeBlock),
 					Column:   1,
@@ -270,13 +271,13 @@ func (r *LineLengthRule) Name() string {
 	return "line-length"
 }
 
-func (r *LineLengthRule) Check(_ ast.Node, source []byte, filePath string) []Issue {
-	var issues []Issue
+func (r *LineLengthRule) Check(_ ast.Node, source []byte, filePath string) []linters.Issue {
+	var issues []linters.Issue
 	lines := strings.Split(string(source), "\n")
 
 	for i, line := range lines {
 		if len(line) > r.MaxLength {
-			issues = append(issues, Issue{
+			issues = append(issues, linters.Issue{
 				File:     filePath,
 				Line:     i + 1,
 				Column:   r.MaxLength + 1,
@@ -297,13 +298,13 @@ func (r *TrailingWhitespaceRule) Name() string {
 	return "trailing-whitespace"
 }
 
-func (r *TrailingWhitespaceRule) Check(_ ast.Node, source []byte, filePath string) []Issue {
-	var issues []Issue
+func (r *TrailingWhitespaceRule) Check(_ ast.Node, source []byte, filePath string) []linters.Issue {
+	var issues []linters.Issue
 	lines := strings.Split(string(source), "\n")
 
 	for i, line := range lines {
 		if len(line) > 0 && (line[len(line)-1] == ' ' || line[len(line)-1] == '\t') {
-			issues = append(issues, Issue{
+			issues = append(issues, linters.Issue{
 				File:     filePath,
 				Line:     i + 1,
 				Column:   len(line),
@@ -324,8 +325,8 @@ func (r *EmphasisConsistencyRule) Name() string {
 	return "emphasis-consistency"
 }
 
-func (r *EmphasisConsistencyRule) Check(doc ast.Node, source []byte, filePath string) []Issue {
-	var issues []Issue
+func (r *EmphasisConsistencyRule) Check(doc ast.Node, source []byte, filePath string) []linters.Issue {
+	var issues []linters.Issue
 
 	_ = ast.Walk(doc, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if emphasis, ok := node.(*ast.Emphasis); ok && entering {
@@ -336,7 +337,7 @@ func (r *EmphasisConsistencyRule) Check(doc ast.Node, source []byte, filePath st
 				if line <= len(lines) {
 					lineText := lines[line-1]
 					if strings.Contains(lineText, "_") && !strings.Contains(lineText, "*") {
-						issues = append(issues, Issue{
+						issues = append(issues, linters.Issue{
 							File:     filePath,
 							Line:     line,
 							Column:   1,
@@ -361,8 +362,8 @@ func (r *BlankLineRule) Name() string {
 	return "blank-line-spacing"
 }
 
-func (r *BlankLineRule) Check(_ ast.Node, source []byte, filePath string) []Issue {
-	var issues []Issue
+func (r *BlankLineRule) Check(_ ast.Node, source []byte, filePath string) []linters.Issue {
+	var issues []linters.Issue
 	lines := strings.Split(string(source), "\n")
 
 	// Check for excessive blank lines (more than 2 consecutive)
@@ -371,7 +372,7 @@ func (r *BlankLineRule) Check(_ ast.Node, source []byte, filePath string) []Issu
 		if strings.TrimSpace(line) == "" {
 			consecutiveBlank++
 			if consecutiveBlank > 2 {
-				issues = append(issues, Issue{
+				issues = append(issues, linters.Issue{
 					File:     filePath,
 					Line:     i + 1,
 					Column:   1,

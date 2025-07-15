@@ -46,12 +46,9 @@ func (e *Executor) ExecuteWithExitCode(ctx context.Context) (int, error) {
 
 	// Check if this is a PostToolUse hook by examining the handler's last processed message
 	if e.handler.IsPostToolUseHook() {
-		// For PostToolUse hooks, return exit code 1 if there's feedback
-		if response != nil && hasResponseFeedback(response) {
-			return 1, nil
-		}
-		// Otherwise return success
-		return int(ExitSuccess), nil
+		// For PostToolUse hooks, always return exit code 2 to ensure output is visible
+		// This matches smart-lint.sh behavior
+		return int(ExitBlocking), nil
 	}
 
 	// Determine exit code based on response

@@ -123,7 +123,7 @@ func TestExecutor_ExecuteWithExitCode(t *testing.T) {
 				}
 			},
 			input:        `{"hook_event_name":"PostToolUse","session_id":"test","tool_name":"Write","tool_output":"test output"}`,
-			wantExitCode: 1, // PostToolUse with feedback returns exit code 1
+			wantExitCode: int(ExitBlocking), // PostToolUse always returns exit code 2
 		},
 		{
 			name: "post_tool_use_with_message_returns_1",
@@ -136,7 +136,7 @@ func TestExecutor_ExecuteWithExitCode(t *testing.T) {
 				}
 			},
 			input:        `{"hook_event_name":"PostToolUse","session_id":"test","tool_name":"Write","tool_output":"test output"}`,
-			wantExitCode: 1, // PostToolUse with feedback returns exit code 1
+			wantExitCode: int(ExitBlocking), // PostToolUse always returns exit code 2
 		},
 		{
 			name: "post_tool_use_without_feedback_returns_success",
@@ -146,7 +146,7 @@ func TestExecutor_ExecuteWithExitCode(t *testing.T) {
 				}
 			},
 			input:        `{"hook_event_name":"PostToolUse","session_id":"test","tool_name":"Write","tool_output":"test output"}`,
-			wantExitCode: int(ExitSuccess), // PostToolUse without feedback returns success
+			wantExitCode: int(ExitBlocking), // PostToolUse always returns exit code 2
 		},
 	}
 
@@ -546,7 +546,7 @@ func TestChainExecutor_Execute_Error(t *testing.T) {
 }
 
 // TestPostToolUseExitCodes verifies that PostToolUse hooks
-// return exit code 1 when they have feedback, 0 otherwise
+// always return exit code 2 to ensure output visibility
 func TestPostToolUseExitCodes(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -554,37 +554,37 @@ func TestPostToolUseExitCodes(t *testing.T) {
 		wantExitCode int
 	}{
 		{
-			name: "PostToolUse with block decision returns 1",
+			name: "PostToolUse with block decision returns 2",
 			response: &HookResponse{
 				Decision: "block",
 				Reason:   "This has feedback",
 			},
-			wantExitCode: 1,
+			wantExitCode: int(ExitBlocking),
 		},
 		{
-			name: "PostToolUse with approve decision returns 1",
+			name: "PostToolUse with approve decision returns 2",
 			response: &HookResponse{
 				Decision: "approve",
 				Reason:   "Normal approve case",
 			},
-			wantExitCode: 1,
+			wantExitCode: int(ExitBlocking),
 		},
 		{
-			name: "PostToolUse with message returns 1",
+			name: "PostToolUse with message returns 2",
 			response: &HookResponse{
 				Message: "Some feedback message",
 			},
-			wantExitCode: 1,
+			wantExitCode: int(ExitBlocking),
 		},
 		{
-			name:         "PostToolUse with nil response returns 0",
+			name:         "PostToolUse with nil response returns 2",
 			response:     nil,
-			wantExitCode: int(ExitSuccess),
+			wantExitCode: int(ExitBlocking),
 		},
 		{
-			name:         "PostToolUse with empty response returns 0",
+			name:         "PostToolUse with empty response returns 2",
 			response:     &HookResponse{},
-			wantExitCode: int(ExitSuccess),
+			wantExitCode: int(ExitBlocking),
 		},
 	}
 

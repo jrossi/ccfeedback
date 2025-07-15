@@ -8,20 +8,43 @@ import (
 	"strings"
 
 	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/ccfeedback/linters/golang"
+	"github.com/jrossi/ccfeedback/linters/markdown"
 )
 
 // LintingRuleEngine implements RuleEngine to provide linting functionality
 type LintingRuleEngine struct {
-	linters []linters.Linter
+	linters  []linters.Linter
+	executor *linters.ParallelExecutor
+}
+
+// LintingConfig provides configuration options for the linting engine
+type LintingConfig struct {
+	// MaxWorkers sets the maximum number of concurrent workers
+	// If 0 or negative, defaults to runtime.NumCPU()
+	MaxWorkers int
+	// DisableParallel disables parallel execution for debugging
+	DisableParallel bool
 }
 
 // NewLintingRuleEngine creates a new linting rule engine with default linters
 func NewLintingRuleEngine() *LintingRuleEngine {
+	return NewLintingRuleEngineWithConfig(LintingConfig{})
+}
+
+// NewLintingRuleEngineWithConfig creates a new linting rule engine with custom configuration
+func NewLintingRuleEngineWithConfig(config LintingConfig) *LintingRuleEngine {
+	maxWorkers := config.MaxWorkers
+	if config.DisableParallel {
+		maxWorkers = 1
+	}
+
 	return &LintingRuleEngine{
 		linters: []linters.Linter{
-			linters.NewGoLinter(),
-			linters.NewMarkdownLinter(),
+			golang.NewGoLinter(),
+			markdown.NewMarkdownLinter(),
 		},
+		executor: linters.NewParallelExecutor(maxWorkers),
 	}
 }
 
@@ -62,53 +85,54 @@ func (e *LintingRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *PreTool
 		return &HookResponse{Decision: "approve"}, nil
 	}
 
-	// Find appropriate linter
-	for _, linter := range e.linters {
-		if linter.CanHandle(filePath) {
-			result, err := linter.Lint(ctx, filePath, []byte(content))
-			if err != nil {
-				return &HookResponse{
-					Decision: "block",
-					Reason:   fmt.Sprintf("Linting error: %v", err),
-				}, nil
-			}
+	// Run all applicable linters in parallel
+	results := e.executor.ExecuteLinters(ctx, e.linters, filePath, []byte(content))
 
-			// Check for issues and format detailed output
-			var errorIssues, warningIssues []linters.Issue
-			for _, issue := range result.Issues {
-				if issue.Severity == "error" {
-					errorIssues = append(errorIssues, issue)
-				} else {
-					warningIssues = append(warningIssues, issue)
-				}
-			}
+	// Aggregate results
+	aggregatedResult, errs := linters.AggregateResults(results)
 
-			// If there are syntax errors, block the write
-			if len(errorIssues) > 0 {
-				output := e.formatLintOutput(filePath, errorIssues, true)
-				// Write detailed output to stderr for user visibility
-				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
-				return &HookResponse{
-					Decision: "block",
-					Reason:   fmt.Sprintf("Found %d error(s) in %s", len(errorIssues), filePath),
-				}, nil
-			}
+	// Handle any linting errors
+	if len(errs) > 0 {
+		return &HookResponse{
+			Decision: "block",
+			Reason:   fmt.Sprintf("Linting error: %v", errs[0]),
+		}, nil
+	}
 
-			// If formatting is needed, inform but don't block
-			if len(warningIssues) > 0 {
-				output := e.formatLintOutput(filePath, warningIssues, false)
-				// Write detailed output to stderr for user visibility
-				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
-				return &HookResponse{
-					Decision: "approve",
-					Message:  fmt.Sprintf("Found %d warning(s) in %s", len(warningIssues), filePath),
-				}, nil
-			}
+	// Check for issues and format detailed output
+	var errorIssues, warningIssues []linters.Issue
+	for _, issue := range aggregatedResult.Issues {
+		if issue.Severity == "error" {
+			errorIssues = append(errorIssues, issue)
+		} else {
+			warningIssues = append(warningIssues, issue)
 		}
 	}
 
-	// Write success message to stdout for exit code 0
-	fmt.Fprintf(os.Stdout, "\n> Write operation feedback:\n  - [ccfeedback]: ✅ Style clean. Continue with your task.\n")
+	// If there are syntax errors, block the write
+	if len(errorIssues) > 0 {
+		output := e.formatLintOutput(filePath, errorIssues, true)
+		// Write detailed output to stderr for user visibility
+		fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
+		return &HookResponse{
+			Decision: "block",
+			Reason:   fmt.Sprintf("Found %d error(s) in %s", len(errorIssues), filePath),
+		}, nil
+	}
+
+	// If formatting is needed, inform but don't block
+	if len(warningIssues) > 0 {
+		output := e.formatLintOutput(filePath, warningIssues, false)
+		// Write detailed output to stderr for user visibility
+		fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
+		return &HookResponse{
+			Decision: "approve",
+			Message:  fmt.Sprintf("Found %d warning(s) in %s", len(warningIssues), filePath),
+		}, nil
+	}
+
+	// Write success message to stderr (matching smart-lint.sh behavior)
+	fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: ✅ Style clean. Continue with your task.\n")
 	return &HookResponse{Decision: "approve"}, nil
 }
 
@@ -116,8 +140,8 @@ func (e *LintingRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *PreTool
 func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostToolUseMessage) (*HookResponse, error) {
 	// Only check Write and Edit operations
 	if msg.ToolName != "Write" && msg.ToolName != "Edit" && msg.ToolName != "MultiEdit" {
-		// Show status for non-file operations on stdout (exit code 0)
-		fmt.Fprintf(os.Stdout, "\n> Tool execution feedback:\n  - [ccfeedback]: ℹ️  %s operation completed (no linting required)\n", msg.ToolName)
+		// Show status for non-file operations on stderr (matching smart-lint.sh behavior)
+		fmt.Fprintf(os.Stderr, "\n> Tool execution feedback:\n  - [ccfeedback]: ℹ️  %s operation completed (no linting required)\n", msg.ToolName)
 		return nil, nil
 	}
 
@@ -141,69 +165,56 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 	// Read the actual file from disk
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		// File errors are informational, shown on stdout (exit code 0)
+		// File errors shown on stderr (matching smart-lint.sh behavior)
 		if os.IsNotExist(err) {
-			fmt.Fprintf(os.Stdout, "\n> Write operation feedback:\n  - [ccfeedback]: ⚠️  File not found: %s\n", filePath)
+			fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: ⚠️  File not found: %s\n", filePath)
 		} else {
-			fmt.Fprintf(os.Stdout, "\n> Write operation feedback:\n  - [ccfeedback]: ⚠️  Cannot read file: %v\n", err)
+			fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: ⚠️  Cannot read file: %v\n", err)
 		}
 		return nil, nil
 	}
 
-	// Check each linter
-	for _, linter := range e.linters {
-		if linter.CanHandle(filePath) {
-			result, err := linter.Lint(ctx, filePath, content)
-			if err != nil {
-				// Linting errors trigger exit code 1, shown on stderr
-				fmt.Fprintf(os.Stderr, "\n> Linting error for %s: %v\n", filePath, err)
-				continue
-			}
+	// Run all applicable linters in parallel
+	results := e.executor.ExecuteLinters(ctx, e.linters, filePath, content)
 
-			// Check for issues and format detailed output
-			var errorIssues, warningIssues []linters.Issue
-			for _, issue := range result.Issues {
-				if issue.Severity == "error" {
-					errorIssues = append(errorIssues, issue)
-				} else {
-					warningIssues = append(warningIssues, issue)
-				}
-			}
+	// Aggregate results
+	aggregatedResult, errs := linters.AggregateResults(results)
 
-			// Track if we found any issues
-			hasIssues := false
+	// Handle any linting errors
+	for _, err := range errs {
+		// Linting errors trigger exit code 1, shown on stderr
+		fmt.Fprintf(os.Stderr, "\n> Linting error for %s: %v\n", filePath, err)
+	}
 
-			// Issues trigger exit code 1, shown on stderr
-			if len(errorIssues) > 0 {
-				output := e.formatLintOutput(filePath, errorIssues, true)
-				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
-				hasIssues = true
-			} else if len(warningIssues) > 0 {
-				output := e.formatLintOutput(filePath, warningIssues, false)
-				fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
-				hasIssues = true
-			} else {
-				// Success shown on stdout (exit code 0)
-				fmt.Fprintf(os.Stdout, "\n> Write operation feedback:\n  - [ccfeedback]: ✅ Style clean. Continue with your task.\n")
-			}
-
-			// Check for associated test files if it's a Go file
-			if strings.HasSuffix(filePath, ".go") && !strings.HasSuffix(filePath, "_test.go") {
-				e.checkTestFile(ctx, filePath)
-			}
-
-			// Return a response that will trigger exit code 1 if there are issues
-			// This makes the output visible while still being non-blocking
-			if hasIssues {
-				return &HookResponse{
-					Decision: "approve",
-					Message:  "Linting issues found - see output for details",
-				}, nil
-			}
+	// Check for issues and format detailed output
+	var errorIssues, warningIssues []linters.Issue
+	for _, issue := range aggregatedResult.Issues {
+		if issue.Severity == "error" {
+			errorIssues = append(errorIssues, issue)
+		} else {
+			warningIssues = append(warningIssues, issue)
 		}
 	}
 
-	// Return nil for clean files
+	// Issues trigger exit code 1, shown on stderr
+	if len(errorIssues) > 0 {
+		output := e.formatLintOutput(filePath, errorIssues, true)
+		fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
+	} else if len(warningIssues) > 0 {
+		output := e.formatLintOutput(filePath, warningIssues, false)
+		fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
+	} else if len(errs) == 0 {
+		// Success shown on stderr (matching smart-lint.sh behavior)
+		fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: ✅ Style clean. Continue with your task.\n")
+	}
+
+	// Check for associated test files if it's a Go file
+	if strings.HasSuffix(filePath, ".go") && !strings.HasSuffix(filePath, "_test.go") {
+		e.checkTestFile(ctx, filePath)
+	}
+
+	// Always return nil for PostToolUse to avoid JSON output interfering with stderr
+	// The exit code is controlled by executor.go based on IsPostToolUseHook()
 	return nil, nil
 }
 
@@ -283,36 +294,36 @@ func (e *LintingRuleEngine) checkTestFile(ctx context.Context, filePath string) 
 		return
 	}
 
-	// Run linters on test file
-	for _, linter := range e.linters {
-		if linter.CanHandle(testPath) {
-			result, err := linter.Lint(ctx, testPath, content)
-			if err != nil {
-				// Test file linting errors trigger exit code 1, shown on stderr
-				fmt.Fprintf(os.Stderr, "\n> Test file linting error for %s: %v\n", testPath, err)
-				continue
-			}
+	// Run all applicable linters on test file in parallel
+	results := e.executor.ExecuteLinters(ctx, e.linters, testPath, content)
 
-			// Report any issues found in test file
-			if len(result.Issues) > 0 {
-				var errorIssues, warningIssues []linters.Issue
-				for _, issue := range result.Issues {
-					if issue.Severity == "error" {
-						errorIssues = append(errorIssues, issue)
-					} else {
-						warningIssues = append(warningIssues, issue)
-					}
-				}
+	// Aggregate results
+	aggregatedResult, errs := linters.AggregateResults(results)
 
-				// Test file issues trigger exit code 1, shown on stderr
-				if len(errorIssues) > 0 {
-					output := e.formatLintOutput(testPath, errorIssues, true)
-					fmt.Fprintf(os.Stderr, "\n> Test file feedback:\n%s\n", output)
-				} else if len(warningIssues) > 0 {
-					output := e.formatLintOutput(testPath, warningIssues, false)
-					fmt.Fprintf(os.Stderr, "\n> Test file feedback:\n%s\n", output)
-				}
+	// Handle any linting errors
+	for _, err := range errs {
+		// Test file linting errors trigger exit code 1, shown on stderr
+		fmt.Fprintf(os.Stderr, "\n> Test file linting error for %s: %v\n", testPath, err)
+	}
+
+	// Report any issues found in test file
+	if len(aggregatedResult.Issues) > 0 {
+		var errorIssues, warningIssues []linters.Issue
+		for _, issue := range aggregatedResult.Issues {
+			if issue.Severity == "error" {
+				errorIssues = append(errorIssues, issue)
+			} else {
+				warningIssues = append(warningIssues, issue)
 			}
+		}
+
+		// Test file issues trigger exit code 1, shown on stderr
+		if len(errorIssues) > 0 {
+			output := e.formatLintOutput(testPath, errorIssues, true)
+			fmt.Fprintf(os.Stderr, "\n> Test file feedback:\n%s\n", output)
+		} else if len(warningIssues) > 0 {
+			output := e.formatLintOutput(testPath, warningIssues, false)
+			fmt.Fprintf(os.Stderr, "\n> Test file feedback:\n%s\n", output)
 		}
 	}
 }

@@ -1,4 +1,4 @@
-package linters
+package markdown
 
 import (
 	"context"

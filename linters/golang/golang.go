@@ -1,4 +1,4 @@
-package linters
+package golang
 
 import (
 	"bytes"
@@ -8,10 +8,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 
 	json "github.com/goccy/go-json"
+	"github.com/jrossi/ccfeedback/linters"
 )
 
 // GoLinter handles Go file linting, formatting, and test running with golangci-lint integration
@@ -94,13 +96,22 @@ func (l *GoLinter) findGolangciLint() string {
 
 // runGolangciLint executes golangci-lint with fast mode on the specified file
 func (l *GoLinter) runGolangciLint(ctx context.Context, filePath string) (*GolangciLintOutput, error) {
+	return l.runGolangciLintMultiple(ctx, []string{filePath})
+}
+
+// runGolangciLintMultiple executes golangci-lint on multiple files at once for better performance
+func (l *GoLinter) runGolangciLintMultiple(ctx context.Context, filePaths []string) (*GolangciLintOutput, error) {
+	if len(filePaths) == 0 {
+		return &GolangciLintOutput{}, nil
+	}
+
 	golangciPath := l.findGolangciLint()
 	if golangciPath == "" {
 		return nil, fmt.Errorf("golangci-lint not found")
 	}
 
-	// Find module root for proper context
-	moduleInfo, err := l.FindModuleRoot(filePath)
+	// Find module root for proper context (use first file)
+	moduleInfo, err := l.FindModuleRoot(filePaths[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to find module root: %w", err)
 	}
@@ -113,8 +124,11 @@ func (l *GoLinter) runGolangciLint(ctx context.Context, filePath string) (*Golan
 		args = append(args, "--config="+configPath)
 	}
 
-	// Add the file path
-	args = append(args, filePath)
+	// Add parallelism flag for better performance
+	args = append(args, "--concurrency", fmt.Sprintf("%d", runtime.NumCPU()))
+
+	// Add all file paths
+	args = append(args, filePaths...)
 
 	// Execute golangci-lint
 	cmd := exec.CommandContext(ctx, golangciPath, args...)
@@ -144,15 +158,15 @@ func (l *GoLinter) runGolangciLint(ctx context.Context, filePath string) (*Golan
 }
 
 // convertGolangciIssues converts golangci-lint issues to our internal Issue format
-func (l *GoLinter) convertGolangciIssues(golangciIssues []GolangciLintIssue) []Issue {
-	var issues []Issue
+func (l *GoLinter) convertGolangciIssues(golangciIssues []GolangciLintIssue) []linters.Issue {
+	var issues []linters.Issue
 	for _, issue := range golangciIssues {
 		severity := "warning"
 		if issue.Severity == "error" {
 			severity = "error"
 		}
 
-		issues = append(issues, Issue{
+		issues = append(issues, linters.Issue{
 			File:     issue.Pos.Filename,
 			Line:     issue.Pos.Line,
 			Column:   issue.Pos.Column,
@@ -165,10 +179,10 @@ func (l *GoLinter) convertGolangciIssues(golangciIssues []GolangciLintIssue) []I
 }
 
 // Lint performs enhanced linting on a Go file using golangci-lint with fallback
-func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*LintResult, error) {
-	result := &LintResult{
+func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*linters.LintResult, error) {
+	result := &linters.LintResult{
 		Success: true,
-		Issues:  []Issue{},
+		Issues:  []linters.Issue{},
 	}
 
 	// Skip generated files
@@ -185,7 +199,7 @@ func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*
 	formatted, err := format.Source(content)
 	if err != nil {
 		result.Success = false
-		result.Issues = append(result.Issues, Issue{
+		result.Issues = append(result.Issues, linters.Issue{
 			File:     filePath,
 			Line:     1,
 			Column:   1,
@@ -199,7 +213,7 @@ func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*
 	// Check if formatting is needed
 	if !bytes.Equal(content, formatted) {
 		result.Formatted = formatted
-		result.Issues = append(result.Issues, Issue{
+		result.Issues = append(result.Issues, linters.Issue{
 			File:     filePath,
 			Line:     1,
 			Column:   1,
@@ -228,7 +242,7 @@ func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*
 	if strings.HasSuffix(filePath, "_test.go") {
 		if output, err := l.runTests(ctx, filePath); err != nil {
 			result.Success = false
-			result.Issues = append(result.Issues, Issue{
+			result.Issues = append(result.Issues, linters.Issue{
 				File:     filePath,
 				Line:     1,
 				Column:   1,
@@ -246,7 +260,7 @@ func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*
 		if _, err := os.Stat(testFile); err == nil {
 			if output, err := l.runTests(ctx, testFile); err != nil {
 				result.Success = false
-				result.Issues = append(result.Issues, Issue{
+				result.Issues = append(result.Issues, linters.Issue{
 					File:     testFile,
 					Line:     1,
 					Column:   1,
@@ -380,4 +394,127 @@ func (l *GoLinter) runTests(ctx context.Context, testFile string) (string, error
 // FormatFile formats a Go file using gofmt
 func (l *GoLinter) FormatFile(content []byte) ([]byte, error) {
 	return format.Source(content)
+}
+
+// LintBatch processes multiple Go files in a single golangci-lint run for better performance
+func (l *GoLinter) LintBatch(ctx context.Context, files map[string][]byte) (map[string]*linters.LintResult, error) {
+	results := make(map[string]*linters.LintResult)
+
+	// First, check syntax for all files with go/format
+	var goFiles []string
+	for filePath, content := range files {
+		result := &linters.LintResult{
+			Success: true,
+			Issues:  []linters.Issue{},
+		}
+
+		// Skip generated files
+		if bytes.Contains(content, []byte("// Code generated")) {
+			results[filePath] = result
+			continue
+		}
+
+		// Skip test data files
+		if strings.Contains(filePath, "/testdata/") {
+			results[filePath] = result
+			continue
+		}
+
+		// Check basic syntax first
+		formatted, err := format.Source(content)
+		if err != nil {
+			result.Success = false
+			result.Issues = append(result.Issues, linters.Issue{
+				File:     filePath,
+				Line:     1,
+				Column:   1,
+				Severity: "error",
+				Message:  fmt.Sprintf("Go syntax error: %v", err),
+				Rule:     "syntax",
+			})
+			results[filePath] = result
+			continue
+		}
+
+		// Check if formatting is needed
+		if !bytes.Equal(content, formatted) {
+			result.Formatted = formatted
+			result.Issues = append(result.Issues, linters.Issue{
+				File:     filePath,
+				Line:     1,
+				Column:   1,
+				Severity: "warning",
+				Message:  "File is not properly formatted with gofmt",
+				Rule:     "gofmt",
+			})
+		}
+
+		results[filePath] = result
+		goFiles = append(goFiles, filePath)
+	}
+
+	// Run golangci-lint on all valid Go files at once
+	if len(goFiles) > 0 {
+		if golangciOutput, err := l.runGolangciLintMultiple(ctx, goFiles); err == nil {
+			// Map issues back to their files
+			for _, issue := range golangciOutput.Issues {
+				if result, exists := results[issue.Pos.Filename]; exists {
+					severity := "warning"
+					if issue.Severity == "error" {
+						severity = "error"
+						result.Success = false
+					}
+
+					result.Issues = append(result.Issues, linters.Issue{
+						File:     issue.Pos.Filename,
+						Line:     issue.Pos.Line,
+						Column:   issue.Pos.Column,
+						Severity: severity,
+						Message:  issue.Text,
+						Rule:     issue.FromLinter,
+					})
+				}
+			}
+		}
+		// If golangci-lint fails, we continue with basic linting results
+	}
+
+	// Run tests for test files
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	for filePath, content := range files {
+		if strings.HasSuffix(filePath, "_test.go") {
+			wg.Add(1)
+			go func(path string, content []byte) {
+				defer wg.Done()
+
+				if output, err := l.runTests(ctx, path); err != nil {
+					mu.Lock()
+					if result, exists := results[path]; exists {
+						result.Success = false
+						result.Issues = append(result.Issues, linters.Issue{
+							File:     path,
+							Line:     1,
+							Column:   1,
+							Severity: "error",
+							Message:  fmt.Sprintf("Tests failed: %v", err),
+							Rule:     "test",
+						})
+						result.TestOutput = output
+					}
+					mu.Unlock()
+				} else {
+					mu.Lock()
+					if result, exists := results[path]; exists {
+						result.TestOutput = output
+					}
+					mu.Unlock()
+				}
+			}(filePath, content)
+		}
+	}
+
+	wg.Wait()
+	return results, nil
 }
