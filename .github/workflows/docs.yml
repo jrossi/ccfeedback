@@ -53,7 +53,7 @@ jobs:
         working-directory: ./docs
 
       - name: Install Docsy dependencies
-        run: npm ci
+        run: npm install
         working-directory: ./docs/themes/docsy
 
       - name: Build with Hugo
