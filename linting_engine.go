@@ -85,6 +85,11 @@ func (e *LintingRuleEngine) SetAppConfig(config *AppConfig) {
 	}
 }
 
+// GetAppConfig returns the application configuration
+func (e *LintingRuleEngine) GetAppConfig() *AppConfig {
+	return e.config
+}
+
 // ConfigurableLinter is an interface for linters that support runtime configuration
 type ConfigurableLinter interface {
 	linters.Linter
