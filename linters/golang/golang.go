@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"go/ast"
 	"go/format"
+	"go/parser"
+	"go/token"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -278,6 +281,99 @@ func (l *GoLinter) Lint(ctx context.Context, filePath string, content []byte) (*
 	return result, nil
 }
 
+// findCommonPrefix finds the longest common prefix among test names
+func findCommonPrefix(tests []string) string {
+	if len(tests) == 0 {
+		return ""
+	}
+	if len(tests) == 1 {
+		return tests[0]
+	}
+
+	// Start with the first test name as the initial prefix
+	prefix := tests[0]
+
+	// Compare with each subsequent test name
+	for i := 1; i < len(tests); i++ {
+		// Find the common prefix between current prefix and this test
+		j := 0
+		for j < len(prefix) && j < len(tests[i]) && prefix[j] == tests[i][j] {
+			j++
+		}
+		// Update prefix to the common part
+		prefix = prefix[:j]
+
+		// If no common prefix remains, we can stop
+		if prefix == "" {
+			break
+		}
+	}
+
+	return prefix
+}
+
+// extractTestFunctions parses a Go test file and extracts all test function names
+func (l *GoLinter) extractTestFunctions(filePath string) ([]string, error) {
+	// Read the file content
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// Parse the file - we only need function declarations, not the full AST
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, filePath, content, parser.ParseComments)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse file: %w", err)
+	}
+
+	var testFunctions []string
+
+	// Walk through all declarations in the file
+	for _, decl := range file.Decls {
+		// Check if it's a function declaration
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok {
+			continue
+		}
+
+		// Check if the function name starts with "Test"
+		if !strings.HasPrefix(fn.Name.Name, "Test") {
+			continue
+		}
+
+		// Check if it has exactly one parameter
+		if fn.Type.Params == nil || len(fn.Type.Params.List) != 1 {
+			continue
+		}
+
+		// Check if the parameter is of type *testing.T
+		param := fn.Type.Params.List[0]
+		if len(param.Names) != 1 {
+			continue
+		}
+
+		// Check the parameter type
+		starExpr, ok := param.Type.(*ast.StarExpr)
+		if !ok {
+			continue
+		}
+
+		// Check if it's *testing.T
+		selectorExpr, ok := starExpr.X.(*ast.SelectorExpr)
+		if !ok {
+			continue
+		}
+
+		// Check the package and type name
+		if ident, ok := selectorExpr.X.(*ast.Ident); ok && ident.Name == "testing" && selectorExpr.Sel.Name == "T" {
+			testFunctions = append(testFunctions, fn.Name.Name)
+		}
+	}
+
+	return testFunctions, nil
+}
+
 // FindModuleRoot walks up the directory tree to find go.mod
 func (l *GoLinter) FindModuleRoot(startPath string) (*ModuleInfo, error) {
 	absPath, err := filepath.Abs(startPath)
@@ -354,20 +450,43 @@ func (l *GoLinter) runTests(ctx context.Context, testFile string) (string, error
 	// Convert to Unix-style path for go test
 	testPath := "./" + filepath.ToSlash(relPath)
 
-	// Extract the test file name to build a pattern
-	testFileName := filepath.Base(testFile)
-	// Remove the .go extension to get the base name
-	testBaseName := strings.TrimSuffix(testFileName, "_test.go")
+	var testPattern string
 
-	// Capitalize first letter for test pattern
-	if len(testBaseName) > 0 {
-		testBaseName = strings.ToUpper(testBaseName[:1]) + testBaseName[1:]
+	// Try to extract actual test functions from the file
+	testFunctions, err := l.extractTestFunctions(testFile)
+	if err == nil && len(testFunctions) > 0 {
+		// Successfully extracted test functions
+		if len(testFunctions) == 1 {
+			// Only one test, run it specifically
+			testPattern = fmt.Sprintf("^%s$", testFunctions[0])
+		} else {
+			// Multiple tests, find common prefix and build optimized pattern
+			commonPrefix := findCommonPrefix(testFunctions)
+			if len(commonPrefix) > 4 { // More than just "Test"
+				// Use the common prefix for more precise matching
+				testPattern = fmt.Sprintf("^%s", commonPrefix)
+			} else {
+				// No meaningful common prefix, build pattern from all test names
+				// This creates a pattern like ^(TestFoo|TestBar|TestBaz)$
+				testPattern = fmt.Sprintf("^(%s)$", strings.Join(testFunctions, "|"))
+			}
+		}
+	} else {
+		// Fallback to filename-based pattern if extraction fails
+		testFileName := filepath.Base(testFile)
+		// Remove the .go extension to get the base name
+		testBaseName := strings.TrimSuffix(testFileName, "_test.go")
+
+		// Capitalize first letter for test pattern
+		if len(testBaseName) > 0 {
+			testBaseName = strings.ToUpper(testBaseName[:1]) + testBaseName[1:]
+		}
+
+		// Build a regex pattern that matches only tests from this specific file
+		// For example: if the file is executor_test.go, this will match ^TestExecutor
+		// This ensures we only run tests that start with Test<Filename>
+		testPattern = fmt.Sprintf("^Test%s", testBaseName)
 	}
-
-	// Build a regex pattern that matches only tests from this specific file
-	// For example: if the file is executor_test.go, this will match ^TestExecutor
-	// This ensures we only run tests that start with Test<Filename>
-	testPattern := fmt.Sprintf("^Test%s", testBaseName)
 
 	// Run go test with -run flag to only run tests matching the pattern
 	// This ensures we only run tests from the specific test file
