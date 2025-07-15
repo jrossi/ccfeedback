@@ -10,6 +10,7 @@ import (
 	"github.com/jrossi/ccfeedback/linters"
 	"github.com/jrossi/ccfeedback/linters/golang"
 	"github.com/jrossi/ccfeedback/linters/markdown"
+	"github.com/jrossi/ccfeedback/linters/python"
 )
 
 // LintingRuleEngine implements RuleEngine to provide linting functionality
@@ -50,6 +51,7 @@ func NewLintingRuleEngineWithConfig(config LintingConfig) *LintingRuleEngine {
 	// We'll update them when SetAppConfig is called
 	engine.linters = append(engine.linters, golang.NewGoLinter())
 	engine.linters = append(engine.linters, markdown.NewMarkdownLinter())
+	engine.linters = append(engine.linters, python.NewPythonLinter())
 
 	return engine
 }
