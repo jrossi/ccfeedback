@@ -1,0 +1,24 @@
+{
+  "parallel": {
+    "maxWorkers": 4
+  },
+  "timeout": "5m",
+  "linters": {
+    "golang": {
+      "enabled": true,
+      "config": {
+        "golangciConfig": ".golangci.yml",
+        "testTimeout": "10m"
+      }
+    },
+    "markdown": {
+      "enabled": true,
+      "config": {
+        "maxLineLength": 100,
+        "requireFrontmatter": false,
+        "maxBlankLines": 2,
+        "listIndentSize": 2
+      }
+    }
+  }
+}

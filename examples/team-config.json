@@ -1,0 +1,70 @@
+{
+  "parallel": {
+    "maxWorkers": 4
+  },
+  "timeout": "3m",
+  "linters": {
+    "golang": {
+      "enabled": true,
+      "config": {
+        "testTimeout": "10m",
+        "disabledChecks": ["wsl", "nlreturn"]
+      }
+    },
+    "markdown": {
+      "enabled": true,
+      "config": {
+        "maxLineLength": 100,
+        "requireFrontmatter": false,
+        "disabledRules": ["emphasis-consistency", "trailing-whitespace"]
+      }
+    }
+  },
+  "rules": [
+    {
+      "pattern": "internal/**/*.go",
+      "linter": "golang",
+      "rules": {
+        "disabledChecks": []
+      }
+    },
+    {
+      "pattern": "pkg/**/*.go",
+      "linter": "golang",
+      "rules": {
+        "disabledChecks": ["wsl", "nlreturn", "gochecknoglobals"]
+      }
+    },
+    {
+      "pattern": "**/testdata/**",
+      "linter": "*",
+      "rules": {
+        "enabled": false
+      }
+    },
+    {
+      "pattern": "**/*.pb.go",
+      "linter": "golang",
+      "rules": {
+        "disabledChecks": ["all"]
+      }
+    },
+    {
+      "pattern": "docs/**/*.md",
+      "linter": "markdown",
+      "rules": {
+        "requireFrontmatter": true,
+        "maxLineLength": 80,
+        "disabledRules": []
+      }
+    },
+    {
+      "pattern": "CHANGELOG.md",
+      "linter": "markdown",
+      "rules": {
+        "maxLineLength": 200,
+        "disabledRules": ["line-length", "list-indentation"]
+      }
+    }
+  ]
+}

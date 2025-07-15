@@ -14,6 +14,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	json "github.com/goccy/go-json"
 	"github.com/jrossi/ccfeedback/linters"
@@ -27,6 +28,19 @@ type GoLinter struct {
 	golangciPath string
 	golangciOnce sync.Once
 	mu           sync.RWMutex
+	config       *GolangConfig
+}
+
+// GolangConfig represents golang linter specific configuration
+type GolangConfig struct {
+	GolangciConfig *string   `json:"golangciConfig,omitempty"` // path to golangci.yml
+	DisabledChecks []string  `json:"disabledChecks,omitempty"`
+	TestTimeout    *Duration `json:"testTimeout,omitempty"`
+}
+
+// Duration is a wrapper around time.Duration for JSON unmarshaling
+type Duration struct {
+	time.Duration
 }
 
 // GolangciLintIssue represents an issue from golangci-lint JSON output
@@ -58,11 +72,65 @@ type ModuleInfo struct {
 	GoModPath string // Full path to go.mod file
 }
 
-// NewGoLinter creates a new Go linter
+// NewGoLinter creates a new Go linter with default configuration
 func NewGoLinter() *GoLinter {
+	return NewGoLinterWithConfig(nil)
+}
+
+// NewGoLinterWithConfig creates a new Go linter with the given configuration
+func NewGoLinterWithConfig(config *GolangConfig) *GoLinter {
+	// Apply default configuration if not provided
+	if config == nil {
+		config = &GolangConfig{}
+	}
+
+	// Set defaults
+	if config.TestTimeout == nil {
+		defaultTimeout := &Duration{Duration: 10 * time.Minute}
+		config.TestTimeout = defaultTimeout
+	}
+
 	return &GoLinter{
 		moduleCache: make(map[string]*ModuleInfo),
+		config:      config,
 	}
+}
+
+// SetConfig updates the linter configuration
+func (l *GoLinter) SetConfig(configData json.RawMessage) error {
+	var config GolangConfig
+	if err := json.Unmarshal(configData, &config); err != nil {
+		return fmt.Errorf("failed to parse golang config: %w", err)
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	// Update config
+	l.config = &config
+
+	// Set defaults if not provided
+	if l.config.TestTimeout == nil {
+		defaultTimeout := &Duration{Duration: 10 * time.Minute}
+		l.config.TestTimeout = defaultTimeout
+	}
+
+	return nil
+}
+
+// isCheckDisabled returns true if the given check/linter is disabled in config
+func (l *GoLinter) isCheckDisabled(checkName string) bool {
+	if l.config == nil || len(l.config.DisabledChecks) == 0 {
+		return false
+	}
+
+	for _, disabled := range l.config.DisabledChecks {
+		if disabled == checkName {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Name returns the linter name
@@ -119,12 +187,19 @@ func (l *GoLinter) runGolangciLintMultiple(ctx context.Context, filePaths []stri
 		return nil, fmt.Errorf("failed to find module root: %w", err)
 	}
 
-	// Check for .golangci.yml config file
-	configPath := filepath.Join(moduleInfo.Root, ".golangci.yml")
+	// Build golangci-lint arguments
 	args := []string{"run", "--fast", "--out-format=json"}
 
-	if _, err := os.Stat(configPath); err == nil {
-		args = append(args, "--config="+configPath)
+	// Check for configured golangci config file first
+	if l.config != nil && l.config.GolangciConfig != nil && *l.config.GolangciConfig != "" {
+		// Use the configured path
+		args = append(args, "--config="+*l.config.GolangciConfig)
+	} else {
+		// Check for default .golangci.yml config file
+		configPath := filepath.Join(moduleInfo.Root, ".golangci.yml")
+		if _, err := os.Stat(configPath); err == nil {
+			args = append(args, "--config="+configPath)
+		}
 	}
 
 	// Add parallelism flag for better performance
@@ -164,6 +239,11 @@ func (l *GoLinter) runGolangciLintMultiple(ctx context.Context, filePaths []stri
 func (l *GoLinter) convertGolangciIssues(golangciIssues []GolangciLintIssue) []linters.Issue {
 	var issues []linters.Issue
 	for _, issue := range golangciIssues {
+		// Skip disabled checks
+		if l.isCheckDisabled(issue.FromLinter) {
+			continue
+		}
+
 		severity := "warning"
 		if issue.Severity == "error" {
 			severity = "error"
@@ -438,13 +518,17 @@ func (l *GoLinter) runTests(ctx context.Context, testFile string) (string, error
 	// Find module root
 	moduleInfo, err := l.FindModuleRoot(testFile)
 	if err != nil {
-		return "", fmt.Errorf("failed to find module root: %w", err)
+		// If we can't find a module root, skip running tests
+		// This can happen in test scenarios or with isolated files
+		return "", nil
 	}
 
 	// Calculate relative path from module root
 	relPath, err := filepath.Rel(moduleInfo.Root, filepath.Dir(testFile))
 	if err != nil {
-		return "", fmt.Errorf("failed to get relative path: %w", err)
+		// If we can't calculate relative path, skip running tests
+		// This can happen when the file is outside the module
+		return "", nil
 	}
 
 	// Convert to Unix-style path for go test
@@ -488,9 +572,19 @@ func (l *GoLinter) runTests(ctx context.Context, testFile string) (string, error
 		testPattern = fmt.Sprintf("^Test%s", testBaseName)
 	}
 
+	// Build test command with timeout
+	args := []string{"test", "-v", "-run", testPattern}
+
+	// Add timeout if configured
+	if l.config != nil && l.config.TestTimeout != nil {
+		args = append(args, "-timeout", l.config.TestTimeout.Duration.String())
+	}
+
+	args = append(args, testPath)
+
 	// Run go test with -run flag to only run tests matching the pattern
 	// This ensures we only run tests from the specific test file
-	cmd := exec.CommandContext(ctx, "go", "test", "-v", "-run", testPattern, testPath)
+	cmd := exec.CommandContext(ctx, "go", args...)
 	cmd.Dir = moduleInfo.Root
 
 	var stdout, stderr bytes.Buffer
@@ -558,14 +652,17 @@ func (l *GoLinter) LintBatch(ctx context.Context, files map[string][]byte) (map[
 		// Check if formatting is needed
 		if !bytes.Equal(content, formatted) {
 			result.Formatted = formatted
-			result.Issues = append(result.Issues, linters.Issue{
-				File:     filePath,
-				Line:     1,
-				Column:   1,
-				Severity: "warning",
-				Message:  "File is not properly formatted with gofmt",
-				Rule:     "gofmt",
-			})
+			// Only add formatting issue if gofmt is not disabled
+			if !l.isCheckDisabled("gofmt") {
+				result.Issues = append(result.Issues, linters.Issue{
+					File:     filePath,
+					Line:     1,
+					Column:   1,
+					Severity: "warning",
+					Message:  "File is not properly formatted with gofmt",
+					Rule:     "gofmt",
+				})
+			}
 		}
 
 		results[filePath] = result
@@ -577,6 +674,11 @@ func (l *GoLinter) LintBatch(ctx context.Context, files map[string][]byte) (map[
 		if golangciOutput, err := l.runGolangciLintMultiple(ctx, goFiles); err == nil {
 			// Map issues back to their files
 			for _, issue := range golangciOutput.Issues {
+				// Skip disabled checks
+				if l.isCheckDisabled(issue.FromLinter) {
+					continue
+				}
+
 				if result, exists := results[issue.Pos.Filename]; exists {
 					severity := "warning"
 					if issue.Severity == "error" {

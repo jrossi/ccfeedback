@@ -279,8 +279,3 @@ func BenchmarkStreamParser(b *testing.B) {
 		}
 	}
 }
-
-// Helper function
-func boolPtr(b bool) *bool {
-	return &b
-}

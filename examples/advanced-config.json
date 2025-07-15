@@ -1,0 +1,69 @@
+{
+  "parallel": {
+    "maxWorkers": 8,
+    "disableParallel": false
+  },
+  "timeout": "2m",
+  "linters": {
+    "golang": {
+      "enabled": true,
+      "config": {
+        "golangciConfig": "configs/strict.golangci.yml",
+        "disabledChecks": ["gosec", "gocyclo"],
+        "testTimeout": "5m"
+      }
+    },
+    "markdown": {
+      "enabled": true,
+      "config": {
+        "maxLineLength": 120,
+        "requireFrontmatter": true,
+        "maxBlankLines": 3,
+        "listIndentSize": 4,
+        "disabledRules": ["emphasis-consistency"]
+      }
+    }
+  },
+  "rules": [
+    {
+      "pattern": "*_test.go",
+      "linter": "golang",
+      "rules": {
+        "testTimeout": "15m",
+        "disabledChecks": ["gofmt", "gosec", "gocyclo", "dupl"]
+      }
+    },
+    {
+      "pattern": "docs/*.md",
+      "linter": "markdown",
+      "rules": {
+        "requireFrontmatter": true,
+        "maxLineLength": 80,
+        "frontmatterSchema": {
+          "type": "object",
+          "required": ["title", "date"],
+          "properties": {
+            "title": {"type": "string"},
+            "date": {"type": "string", "format": "date"},
+            "tags": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      }
+    },
+    {
+      "pattern": "*.generated.go",
+      "linter": "golang",
+      "rules": {
+        "disabledChecks": ["gofmt", "golint", "stylecheck", "gosimple", "ineffassign"]
+      }
+    },
+    {
+      "pattern": "README.md",
+      "linter": "markdown", 
+      "rules": {
+        "requireFrontmatter": false,
+        "maxLineLength": 150
+      }
+    }
+  ]
+}

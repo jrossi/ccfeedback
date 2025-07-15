@@ -61,8 +61,8 @@ fmt.Println("Bad formatting")
 func main() {
 	fmt.Println("Missing import"
 }`,
-			expectBlocking: false, // Syntax errors might not be caught by formatter
-			expectApproval: true,
+			expectBlocking: true, // Syntax errors are caught and blocked
+			expectApproval: false,
 		},
 	}
 

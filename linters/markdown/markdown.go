@@ -3,6 +3,7 @@ package markdown
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -23,6 +24,17 @@ type MarkdownLinter struct {
 	parser  goldmark.Markdown
 	rules   []MarkdownRule
 	schemas map[string]*jsonschema.Schema
+	config  *MarkdownConfig
+}
+
+// MarkdownConfig represents markdown linter specific configuration
+type MarkdownConfig struct {
+	MaxLineLength      *int             `json:"maxLineLength,omitempty"`
+	RequireFrontmatter *bool            `json:"requireFrontmatter,omitempty"`
+	FrontmatterSchema  *json.RawMessage `json:"frontmatterSchema,omitempty"`
+	DisabledRules      []string         `json:"disabledRules,omitempty"`
+	MaxBlankLines      *int             `json:"maxBlankLines,omitempty"`
+	ListIndentSize     *int             `json:"listIndentSize,omitempty"`
 }
 
 // MarkdownRule defines the interface for markdown linting rules
@@ -31,8 +43,13 @@ type MarkdownRule interface {
 	Name() string
 }
 
-// NewMarkdownLinter creates a new markdown linter with all standard rules
+// NewMarkdownLinter creates a new markdown linter with default configuration
 func NewMarkdownLinter() *MarkdownLinter {
+	return NewMarkdownLinterWithConfig(nil)
+}
+
+// NewMarkdownLinterWithConfig creates a new markdown linter with the given configuration
+func NewMarkdownLinterWithConfig(config *MarkdownConfig) *MarkdownLinter {
 	// Create parser with front matter support
 	frontmatterExtension := &frontmatter.Extender{}
 	md := goldmark.New(
@@ -44,22 +61,118 @@ func NewMarkdownLinter() *MarkdownLinter {
 		),
 	)
 
+	// Apply default configuration if not provided
+	if config == nil {
+		config = &MarkdownConfig{}
+	}
+
+	// Set defaults
+	if config.MaxLineLength == nil {
+		defaultLength := 120
+		config.MaxLineLength = &defaultLength
+	}
+	if config.MaxBlankLines == nil {
+		defaultBlankLines := 2
+		config.MaxBlankLines = &defaultBlankLines
+	}
+	if config.ListIndentSize == nil {
+		defaultIndentSize := 2
+		config.ListIndentSize = &defaultIndentSize
+	}
+	if config.RequireFrontmatter == nil {
+		defaultRequireFrontmatter := false
+		config.RequireFrontmatter = &defaultRequireFrontmatter
+	}
+
 	// Initialize all linting rules
 	rules := []MarkdownRule{
 		&HeadingHierarchyRule{},
-		&ListIndentationRule{},
+		&ListIndentationRule{IndentSize: *config.ListIndentSize},
 		&CodeBlockRule{},
-		&LineLengthRule{MaxLength: 120},
+		&LineLengthRule{MaxLength: *config.MaxLineLength},
 		&TrailingWhitespaceRule{},
 		&EmphasisConsistencyRule{},
-		&BlankLineRule{},
+		&BlankLineRule{MaxBlankLines: *config.MaxBlankLines},
+	}
+
+	// Filter out disabled rules
+	enabledRules := []MarkdownRule{}
+	for _, rule := range rules {
+		disabled := false
+		for _, disabledRule := range config.DisabledRules {
+			if rule.Name() == disabledRule {
+				disabled = true
+				break
+			}
+		}
+		if !disabled {
+			enabledRules = append(enabledRules, rule)
+		}
 	}
 
 	return &MarkdownLinter{
 		parser:  md,
-		rules:   rules,
+		rules:   enabledRules,
 		schemas: make(map[string]*jsonschema.Schema),
+		config:  config,
 	}
+}
+
+// SetConfig updates the linter configuration
+func (l *MarkdownLinter) SetConfig(configData json.RawMessage) error {
+	var config MarkdownConfig
+	if err := json.Unmarshal(configData, &config); err != nil {
+		return fmt.Errorf("failed to parse markdown config: %w", err)
+	}
+
+	// Update config and reinitialize rules
+	l.config = &config
+
+	// Set defaults if not provided
+	if l.config.MaxLineLength == nil {
+		defaultLength := 120
+		l.config.MaxLineLength = &defaultLength
+	}
+	if l.config.MaxBlankLines == nil {
+		defaultBlankLines := 2
+		l.config.MaxBlankLines = &defaultBlankLines
+	}
+	if l.config.ListIndentSize == nil {
+		defaultIndentSize := 2
+		l.config.ListIndentSize = &defaultIndentSize
+	}
+	if l.config.RequireFrontmatter == nil {
+		defaultRequireFrontmatter := false
+		l.config.RequireFrontmatter = &defaultRequireFrontmatter
+	}
+
+	// Reinitialize rules with new config
+	rules := []MarkdownRule{
+		&HeadingHierarchyRule{},
+		&ListIndentationRule{IndentSize: *l.config.ListIndentSize},
+		&CodeBlockRule{},
+		&LineLengthRule{MaxLength: *l.config.MaxLineLength},
+		&TrailingWhitespaceRule{},
+		&EmphasisConsistencyRule{},
+		&BlankLineRule{MaxBlankLines: *l.config.MaxBlankLines},
+	}
+
+	// Filter out disabled rules
+	l.rules = []MarkdownRule{}
+	for _, rule := range rules {
+		disabled := false
+		for _, disabledRule := range l.config.DisabledRules {
+			if rule.Name() == disabledRule {
+				disabled = true
+				break
+			}
+		}
+		if !disabled {
+			l.rules = append(l.rules, rule)
+		}
+	}
+
+	return nil
 }
 
 // Name returns the linter name
@@ -98,6 +211,16 @@ func (l *MarkdownLinter) Lint(_ context.Context, filePath string, content []byte
 				result.Issues = append(result.Issues, schemaIssues...)
 			}
 		}
+	} else if l.config != nil && l.config.RequireFrontmatter != nil && *l.config.RequireFrontmatter {
+		// Front matter is required but not present
+		result.Issues = append(result.Issues, linters.Issue{
+			File:     filePath,
+			Line:     1,
+			Column:   1,
+			Severity: "error",
+			Message:  "Front matter is required but not present",
+			Rule:     "require-frontmatter",
+		})
 	}
 
 	// Apply all linting rules
@@ -200,8 +323,10 @@ func (r *HeadingHierarchyRule) Check(doc ast.Node, source []byte, filePath strin
 	return issues
 }
 
-// ListIndentationRule ensures consistent 2-space indentation for nested lists
-type ListIndentationRule struct{}
+// ListIndentationRule ensures consistent indentation for nested lists
+type ListIndentationRule struct {
+	IndentSize int
+}
 
 func (r *ListIndentationRule) Name() string {
 	return "list-indentation"
@@ -211,19 +336,25 @@ func (r *ListIndentationRule) Check(_ ast.Node, source []byte, filePath string) 
 	var issues []linters.Issue
 	lines := strings.Split(string(source), "\n")
 
+	// Use configured indent size, default to 2 if not set
+	indentSize := r.IndentSize
+	if indentSize <= 0 {
+		indentSize = 2
+	}
+
 	// Check list indentation using simple pattern matching
 	listPattern := regexp.MustCompile(`^(\s*)[-*+]|\d+\.\s`)
 
 	for i, line := range lines {
 		if matches := listPattern.FindStringSubmatch(line); matches != nil {
 			indent := len(matches[1])
-			if indent%2 != 0 {
+			if indent%indentSize != 0 {
 				issues = append(issues, linters.Issue{
 					File:     filePath,
 					Line:     i + 1,
 					Column:   1,
 					Severity: "warning",
-					Message:  "List items should use 2-space indentation for nesting",
+					Message:  fmt.Sprintf("List items should use %d-space indentation for nesting", indentSize),
 					Rule:     r.Name(),
 				})
 			}
@@ -356,7 +487,9 @@ func (r *EmphasisConsistencyRule) Check(doc ast.Node, source []byte, filePath st
 }
 
 // BlankLineRule ensures proper spacing around elements
-type BlankLineRule struct{}
+type BlankLineRule struct {
+	MaxBlankLines int
+}
 
 func (r *BlankLineRule) Name() string {
 	return "blank-line-spacing"
@@ -366,18 +499,24 @@ func (r *BlankLineRule) Check(_ ast.Node, source []byte, filePath string) []lint
 	var issues []linters.Issue
 	lines := strings.Split(string(source), "\n")
 
-	// Check for excessive blank lines (more than 2 consecutive)
+	// Use configured max blank lines, default to 2 if not set
+	maxBlankLines := r.MaxBlankLines
+	if maxBlankLines <= 0 {
+		maxBlankLines = 2
+	}
+
+	// Check for excessive blank lines
 	consecutiveBlank := 0
 	for i, line := range lines {
 		if strings.TrimSpace(line) == "" {
 			consecutiveBlank++
-			if consecutiveBlank > 2 {
+			if consecutiveBlank > maxBlankLines {
 				issues = append(issues, linters.Issue{
 					File:     filePath,
 					Line:     i + 1,
 					Column:   1,
 					Severity: "warning",
-					Message:  "More than 2 consecutive blank lines",
+					Message:  fmt.Sprintf("More than %d consecutive blank lines", maxBlankLines),
 					Rule:     r.Name(),
 				})
 			}

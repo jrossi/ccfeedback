@@ -16,6 +16,7 @@ import (
 type LintingRuleEngine struct {
 	linters  []linters.Linter
 	executor *linters.ParallelExecutor
+	config   *AppConfig
 }
 
 // LintingConfig provides configuration options for the linting engine
@@ -39,18 +40,97 @@ func NewLintingRuleEngineWithConfig(config LintingConfig) *LintingRuleEngine {
 		maxWorkers = 1
 	}
 
-	return &LintingRuleEngine{
-		linters: []linters.Linter{
-			golang.NewGoLinter(),
-			markdown.NewMarkdownLinter(),
-		},
+	engine := &LintingRuleEngine{
+		linters:  []linters.Linter{},
 		executor: linters.NewParallelExecutor(maxWorkers),
+		config:   NewAppConfig(),
 	}
+
+	// Initialize linters with empty configs for now
+	// We'll update them when SetAppConfig is called
+	engine.linters = append(engine.linters, golang.NewGoLinter())
+	engine.linters = append(engine.linters, markdown.NewMarkdownLinter())
+
+	return engine
 }
 
 // AddLinter adds a custom linter to the engine
 func (e *LintingRuleEngine) AddLinter(linter linters.Linter) {
 	e.linters = append(e.linters, linter)
+}
+
+// SetAppConfig sets the application configuration
+func (e *LintingRuleEngine) SetAppConfig(config *AppConfig) {
+	e.config = config
+
+	// Update linter configurations
+	if config != nil {
+		for _, linter := range e.linters {
+			// Check if this linter is disabled
+			if !config.IsLinterEnabled(linter.Name()) {
+				continue
+			}
+
+			// Get linter-specific configuration
+			if linterConfig, ok := config.GetLinterConfig(linter.Name()); ok {
+				// Try to cast to configurable linter
+				if configurable, ok := linter.(ConfigurableLinter); ok {
+					if err := configurable.SetConfig(linterConfig); err != nil {
+						// Log error but continue
+						fmt.Fprintf(os.Stderr, "Warning: Failed to configure %s linter: %v\n", linter.Name(), err)
+					}
+				}
+			}
+		}
+	}
+}
+
+// ConfigurableLinter is an interface for linters that support runtime configuration
+type ConfigurableLinter interface {
+	linters.Linter
+	SetConfig(config json.RawMessage) error
+}
+
+// applyRuleOverrides applies any rule overrides for the given file path
+func (e *LintingRuleEngine) applyRuleOverrides(filePath string) {
+	if e.config == nil {
+		return
+	}
+
+	// Apply overrides for each linter
+	for _, linter := range e.linters {
+		// Get any rule overrides for this file and linter
+		overrides := e.config.GetRuleOverrides(filePath, linter.Name())
+		if len(overrides) == 0 {
+			continue
+		}
+
+		// Try to cast to configurable linter
+		if configurable, ok := linter.(ConfigurableLinter); ok {
+			// Merge all overrides into a single config
+			mergedConfig := make(map[string]interface{})
+
+			for _, override := range overrides {
+				var overrideMap map[string]interface{}
+				if err := json.Unmarshal(override, &overrideMap); err != nil {
+					continue
+				}
+
+				// Merge this override into the merged config
+				for k, v := range overrideMap {
+					mergedConfig[k] = v
+				}
+			}
+
+			// Convert back to JSON and apply
+			if configData, err := json.Marshal(mergedConfig); err == nil {
+				if err := configurable.SetConfig(configData); err != nil {
+					// Log error but continue
+					fmt.Fprintf(os.Stderr, "Warning: Failed to apply rule override for %s linter: %v\n", linter.Name(), err)
+				}
+			}
+		}
+	}
 }
 
 // EvaluatePreToolUse checks files before they're written
@@ -84,6 +164,9 @@ func (e *LintingRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *PreTool
 	if err := json.Unmarshal(contentRaw, &content); err != nil {
 		return &HookResponse{Decision: "approve"}, nil
 	}
+
+	// Apply rule overrides for this file
+	e.applyRuleOverrides(filePath)
 
 	// Run all applicable linters in parallel
 	results := e.executor.ExecuteLinters(ctx, e.linters, filePath, []byte(content))
@@ -173,6 +256,9 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 		}
 		return nil, nil
 	}
+
+	// Apply rule overrides for this file
+	e.applyRuleOverrides(filePath)
 
 	// Run all applicable linters in parallel
 	results := e.executor.ExecuteLinters(ctx, e.linters, filePath, content)

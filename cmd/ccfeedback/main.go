@@ -15,6 +15,7 @@ func main() {
 		timeout     = flag.Duration("timeout", 60*time.Second, "Hook execution timeout")
 		showVersion = flag.Bool("version", false, "Show version information")
 		debug       = flag.Bool("debug", false, "Enable debug output")
+		configFile  = flag.String("config", "", "Path to configuration file")
 	)
 
 	flag.Usage = func() {
@@ -36,8 +37,59 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Load configuration
+	configLoader, err := ccfeedback.NewConfigLoader()
+	if err != nil {
+		if *debug {
+			fmt.Fprintf(os.Stderr, "Failed to create config loader: %v\n", err)
+		}
+		// Continue without config
+		configLoader = nil
+	}
+
+	var appConfig *ccfeedback.AppConfig
+	if configLoader != nil {
+		if *configFile != "" {
+			// Load specific config file
+			appConfig, err = configLoader.LoadConfigWithPaths([]string{*configFile})
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to load config file %s: %v\n", *configFile, err)
+				os.Exit(1)
+			}
+		} else {
+			// Load default config files
+			appConfig, err = configLoader.LoadConfig()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
+				os.Exit(1)
+			}
+		}
+	}
+
+	// Create linting config from app config
+	lintingConfig := ccfeedback.LintingConfig{}
+	if appConfig != nil {
+		if appConfig.Parallel != nil {
+			if appConfig.Parallel.MaxWorkers != nil {
+				lintingConfig.MaxWorkers = *appConfig.Parallel.MaxWorkers
+			}
+			if appConfig.Parallel.DisableParallel != nil {
+				lintingConfig.DisableParallel = *appConfig.Parallel.DisableParallel
+			}
+		}
+		// Override timeout if specified in config
+		if appConfig.Timeout != nil {
+			*timeout = appConfig.Timeout.Duration
+		}
+	}
+
 	// Create rule engine with linting capabilities
-	ruleEngine := ccfeedback.NewLintingRuleEngine()
+	ruleEngine := ccfeedback.NewLintingRuleEngineWithConfig(lintingConfig)
+
+	// Set the app config if available
+	if appConfig != nil {
+		ruleEngine.SetAppConfig(appConfig)
+	}
 
 	// Create executor
 	executor := ccfeedback.NewExecutor(ruleEngine)
