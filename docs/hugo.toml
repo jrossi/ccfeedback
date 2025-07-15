@@ -15,15 +15,15 @@ github_branch = 'main'
 [menu]
   [[menu.main]]
     name = "Documentation"
-    url = "/ccfeedback/docs/"
+    url = "/docs/"
     weight = 10
   [[menu.main]]
     name = "CLI Reference"  
-    url = "/ccfeedback/docs/cli/"
+    url = "/docs/cli/"
     weight = 20
   [[menu.main]]
     name = "Library API"
-    url = "/ccfeedback/docs/library/"
+    url = "/docs/library/"
     weight = 30
   [[menu.main]]
     name = "GitHub"
