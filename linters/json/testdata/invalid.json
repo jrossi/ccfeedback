@@ -1,0 +1,17 @@
+{
+  "name": "Invalid JSON",
+  "version": "1.0.0",
+  "description": "JSON with syntax errors",
+  "data": {
+    "numbers": [1, 2, 3, 4, 5,],  // Trailing comma - invalid
+    "strings": ['hello', 'world'],  // Single quotes - invalid
+    "nested": {
+      "key": "value",
+      "boolean": true,
+      "null_value": null,  // Trailing comma - invalid
+    }
+  },
+  "metadata": {
+    "created": "2025-01-15T10:30:00Z",
+    "tags": ["test", "json", "invalid"]
+  }  // Missing closing brace
