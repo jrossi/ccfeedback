@@ -1,6 +1,8 @@
 # CCFeedback - Claude Code Hooks Library
 
-A high-performance Go library and CLI tool for handling Claude Code hooks with built-in linting capabilities. Features automatic Go file formatting validation and test running. Built with [go-json](https://github.com/goccy/go-json) for optimal JSON parsing performance.
+A high-performance Go library and CLI tool for handling Claude Code hooks with built-in linting capabilities.
+Features automatic Go file formatting validation and test running. Built with
+[go-json](https://github.com/goccy/go-json) for optimal JSON parsing performance.
 
 ## Features
 
@@ -61,7 +63,8 @@ func main() {
 ```go
 type MyRuleEngine struct{}
 
-func (e *MyRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *ccfeedback.PreToolUseMessage) (*ccfeedback.HookResponse, error) {
+func (e *MyRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *ccfeedback.PreToolUseMessage) (
+    *ccfeedback.HookResponse, error) {
     // Block dangerous tools
     if msg.ToolName == "Bash" {
         return &ccfeedback.HookResponse{
@@ -106,7 +109,11 @@ api := ccfeedback.NewBuilder().
 
 ### CLI Tool
 
-The CLI tool reads hook messages from stdin and writes responses to stdout:
+The CLI tool can be used as a hook processor or to analyze configuration:
+
+#### Hook Processing Mode (Default)
+
+Reads hook messages from stdin and writes responses to stdout:
 
 ```bash
 # Basic usage
@@ -117,7 +124,35 @@ ccfeedback -timeout 30s
 
 # Debug mode
 ccfeedback -debug
+
+# With custom configuration
+ccfeedback -config my-config.json
 ```
+
+#### Show Actions Command
+
+Analyze which configuration rules would apply to specific files:
+
+```bash
+# Show configuration rules for a file
+ccfeedback show-actions internal/api.go
+
+# With custom configuration
+ccfeedback -config team-config.json show-actions pkg/public/api.go
+
+# Multiple files
+ccfeedback show-actions internal/foo.go pkg/bar.go README.md
+
+# Debug mode shows which patterns don't match
+ccfeedback -debug show-actions internal/test.go
+```
+
+The show-actions command helps you understand:
+- Which linters apply to each file type
+- Base configuration for applicable linters
+- Rule hierarchy showing pattern matching order
+- Final merged configuration after all rules are applied
+- Configuration file loading order (in debug mode)
 
 ### Go Linting Integration
 
@@ -169,7 +204,10 @@ CCFeedback provides comprehensive Go file linting with enhanced golangci-lint in
 {"decision": "approve"}
 
 # Code with linting issues → Approved with detailed warnings
-{"decision": "approve", "message": "Found 2 linting issues:\n- Line 9: S1021: should merge variable declaration with assignment (gosimple)\n- Line 13: File is not properly formatted (gofmt)"}
+{
+  "decision": "approve",
+  "message": "Found 2 linting issues: Line 9: S1021 (gosimple), Line 13: needs gofmt"
+}
 
 # Syntax error → Blocked
 {"decision": "block", "reason": "syntax: Go syntax error: missing ',' before newline"}
@@ -234,7 +272,8 @@ Hook responses can use either exit codes or JSON:
 
 ## Examples
 
-Working examples are included in the usage section above. For production use, ensure your hooks.json configuration points to the installed ccfeedback binary location.
+Working examples are included in the usage section above. For production use, ensure your hooks.json
+configuration points to the installed ccfeedback binary location.
 
 ## Contributing
 
