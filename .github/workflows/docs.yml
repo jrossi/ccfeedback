@@ -49,7 +49,12 @@ jobs:
         uses: actions/configure-pages@v4
 
       - name: Install Node.js dependencies
-        run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
+        run: |
+          if [[ -f package-lock.json || -f npm-shrinkwrap.json ]]; then
+            npm ci
+          else
+            npm install
+          fi
         working-directory: ./docs
 
       - name: Install Docsy dependencies
