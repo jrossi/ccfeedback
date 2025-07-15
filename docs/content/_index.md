@@ -47,3 +47,4 @@ CCFeedback is built for speed:
 
 [Get Started](/docs/installation/){.btn .btn-primary .btn-lg}
 [View on GitHub](https://github.com/jrossi-claude/ccfeedback){.btn .btn-secondary .btn-lg}<!-- Trigger GitHub Pages deployment -->
+<!-- Re-trigger deployment -->
