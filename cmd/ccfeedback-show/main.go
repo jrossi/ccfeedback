@@ -337,4 +337,3 @@ func MatchesSimplePattern(pattern, name string) bool {
 	matched, _ := filepath.Match(pattern, name)
 	return matched
 }
-
