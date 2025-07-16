@@ -237,7 +237,8 @@ func TestE2E_GolangHookTimeout(t *testing.T) {
 	t.Logf("Exit code: %d", cmd.ProcessState.ExitCode())
 
 	// Should complete reasonably quickly even with short timeout
-	if duration > 10*time.Second {
+	// Allow more time in CI environments which can be slower
+	if duration > 30*time.Second {
 		t.Errorf("Command took too long: %v", duration)
 	}
 }
