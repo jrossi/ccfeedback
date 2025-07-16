@@ -70,30 +70,81 @@ The `init` command:
 - Preserves all existing configuration and custom fields
 - Detects when ccfeedback is already configured
 
-### show-actions Command
+### show Command
 
-Analyze which configuration rules would apply to specific files:
+The `show` command provides comprehensive visibility into ccfeedback's configuration and behavior.
+It includes several subcommands:
+
+#### show config
+
+Display the current merged configuration:
+
+```bash
+# Show current configuration
+ccfeedback show config
+
+# With custom configuration file
+ccfeedback show --config team-config.json config
+
+# Debug mode shows configuration sources
+ccfeedback show --debug config
+```
+
+#### show filter
+
+Analyze which rules and linters apply to specific files:
 
 ```bash
 # Show configuration for a single file
-ccfeedback show-actions internal/api.go
-
-# Multiple files
-ccfeedback show-actions src/main.go pkg/util.go README.md
+ccfeedback show filter internal/api.go
 
 # With custom configuration
-ccfeedback -config team-config.json show-actions pkg/api.go
+ccfeedback show --config team-config.json filter pkg/api.go
 
 # Debug mode shows pattern matching details
-ccfeedback -debug show-actions internal/test.go
+ccfeedback show --debug filter internal/test.go
 ```
 
-The `show-actions` command displays:
-- Which linters apply to each file type
-- Base configuration for applicable linters
-- Rule hierarchy showing pattern matching order
-- Final merged configuration after all rules are applied
-- Configuration file loading order (in debug mode)
+#### show setup
+
+Check ccfeedback setup status:
+
+```bash
+# Show setup status
+ccfeedback show setup
+
+# Debug mode includes environment details
+ccfeedback show --debug setup
+```
+
+#### show linters
+
+List all available linters and their status:
+
+```bash
+# Show all linters
+ccfeedback show linters
+
+# With custom configuration
+ccfeedback show --config team-config.json linters
+```
+
+#### Backward Compatibility
+
+The old `show-actions` command still works and maps to `show filter`:
+
+```bash
+# These are equivalent:
+ccfeedback show-actions internal/api.go
+ccfeedback show filter internal/api.go
+```
+
+#### Show Command Features
+
+- **`show config`**: Displays the complete merged configuration in JSON format
+- **`show filter <file>`**: Shows which linters and rules apply to a specific file
+- **`show setup`**: Checks binary availability, config files, and Claude integration
+- **`show linters`**: Lists all linters with their supported files and tool requirements
 
 ## Global Flags
 

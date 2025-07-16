@@ -50,6 +50,82 @@ builds:
     env:
       - CGO_ENABLED=0
 
+  - id: ccfeedback-init
+    main: ./cmd/ccfeedback-init
+    binary: ccfeedback-init
+    
+    # Custom build flags
+    flags:
+      - -trimpath
+      
+    # Custom ldflags
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
+    
+    # Build for multiple platforms
+    goos:
+      - linux
+      - darwin
+      - windows
+    
+    goarch:
+      - amd64
+      - arm64
+    
+    # Skip certain combinations
+    ignore:
+      - goos: windows
+        goarch: arm64
+    
+    # Set the modified timestamp on the output binary
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    
+    # Environment variables
+    env:
+      - CGO_ENABLED=0
+
+  - id: ccfeedback-show
+    main: ./cmd/ccfeedback-show
+    binary: ccfeedback-show
+    
+    # Custom build flags
+    flags:
+      - -trimpath
+      
+    # Custom ldflags
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
+    
+    # Build for multiple platforms
+    goos:
+      - linux
+      - darwin
+      - windows
+    
+    goarch:
+      - amd64
+      - arm64
+    
+    # Skip certain combinations
+    ignore:
+      - goos: windows
+        goarch: arm64
+    
+    # Set the modified timestamp on the output binary
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    
+    # Environment variables
+    env:
+      - CGO_ENABLED=0
+
 # Archive configuration
 archives:
   - id: ccfeedback
@@ -66,6 +142,12 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
+    
+    # Include all three binaries
+    builds:
+      - ccfeedback
+      - ccfeedback-init
+      - ccfeedback-show
     
     # Files to include in archive
     files:
@@ -210,6 +292,8 @@ brews:
     # Installation script
     install: |
       bin.install "ccfeedback"
+      bin.install "ccfeedback-init"
+      bin.install "ccfeedback-show"
     
     # Test script
     test: |

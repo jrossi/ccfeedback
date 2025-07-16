@@ -197,30 +197,56 @@ The init command:
 - Preserves all existing configuration and custom fields
 - Detects when ccfeedback is already configured
 
-#### Show Actions Command
+#### Show Command
 
-Analyze which configuration rules would apply to specific files:
+The show command provides comprehensive visibility into ccfeedback's configuration and behavior:
 
 ```bash
-# Show configuration rules for a file
-ccfeedback show-actions internal/api.go
+# Show current configuration
+ccfeedback show config
 
-# With custom configuration
-ccfeedback -config team-config.json show-actions pkg/public/api.go
+# Show which rules and linters apply to a specific file
+ccfeedback show filter internal/api.go
 
-# Multiple files
-ccfeedback show-actions internal/foo.go pkg/bar.go README.md
+# Show setup status and configuration paths
+ccfeedback show setup
 
-# Debug mode shows which patterns don't match
-ccfeedback -debug show-actions internal/test.go
+# Show available linters and their status
+ccfeedback show linters
+
+# With custom configuration file
+ccfeedback show --config team-config.json filter pkg/public/api.go
+
+# Debug mode for more detailed output
+ccfeedback show --debug setup
+
+# Backward compatibility: show-actions still works
+ccfeedback show-actions internal/api.go  # Same as: ccfeedback show filter internal/api.go
 ```
 
-The show-actions command helps you understand:
-- Which linters apply to each file type
-- Base configuration for applicable linters
-- Rule hierarchy showing pattern matching order
-- Final merged configuration after all rules are applied
-- Configuration file loading order (in debug mode)
+**Show Subcommands:**
+
+- **`show config`**: Displays the current merged configuration in JSON format
+  - Shows all linters, rules, timeouts, and parallel settings
+  - Indicates configuration file loading order in debug mode
+
+- **`show filter <file>`**: Analyzes which rules apply to a specific file
+  - Shows applicable linters for the file type
+  - Displays base configuration for each linter
+  - Shows rule hierarchy with pattern matching
+  - Displays final merged configuration after all overrides
+
+- **`show setup`**: Checks ccfeedback setup status
+  - Binary availability in PATH
+  - Configuration file locations and status
+  - Claude integration status (hooks configured)
+  - Summary of enabled linters and rules
+
+- **`show linters`**: Lists all available linters
+  - Supported file extensions
+  - Required tools and their availability
+  - Current enabled/disabled status
+  - Custom configuration for each linter
 
 ### Go Linting Integration
 
