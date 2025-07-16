@@ -2,8 +2,6 @@ module github.com/jrossi/ccfeedback
 
 go 1.23.2
 
-toolchain go1.24.5
-
 require (
 	github.com/goccy/go-json v0.10.5
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
