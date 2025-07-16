@@ -17,6 +17,7 @@ CCFeedback provides comprehensive linting support for multiple programming langu
 | [Go](/docs/linters/golang/) | golangci-lint | 30+ linters, module-aware, fast mode |
 | [Python](/docs/linters/python/) | UV/UVX + ruff | Modern Python tooling, fast execution |
 | [JavaScript](/docs/linters/javascript/) | ESLint | Configurable rules, TypeScript support |
+| [Rust](/docs/linters/rust/) | cargo clippy + rustfmt | Clippy lints, format checking, test execution |
 | [Markdown](/docs/linters/markdown/) | Built-in | Frontmatter validation, line length |
 | [JSON](/docs/linters/json/) | Built-in | Schema validation, syntax checking |
 
@@ -30,6 +31,7 @@ Enable all linters with sensible defaults:
     "golang": { "enabled": true },
     "python": { "enabled": true },
     "javascript": { "enabled": true },
+    "rust": { "enabled": true },
     "markdown": { "enabled": true },
     "json": { "enabled": true }
   }
@@ -43,6 +45,7 @@ Enable all linters with sensible defaults:
 | Go | ~100ms (enhanced) / ~4μs (fallback) | Module detection, parallel execution |
 | Python | ~50ms | UV-based tooling, modern Python support |
 | JavaScript | ~30ms | ESLint integration, configurable rules |
+| Rust | ~500ms (no deps) / ~5s+ (with deps) | Cargo integration, clippy + rustfmt |
 | Markdown | ~10ms | Built-in goldmark processing |
 | JSON | ~1ms | High-performance go-json parsing |
 
@@ -175,6 +178,7 @@ lint-fix:
 - **[Go Linting](/docs/linters/golang/)** - golangci-lint integration and configuration
 - **[Python Linting](/docs/linters/python/)** - UV/UVX and ruff setup
 - **[JavaScript Linting](/docs/linters/javascript/)** - ESLint configuration
+- **[Rust Linting](/docs/linters/rust/)** - cargo clippy and rustfmt integration
 - **[Markdown Linting](/docs/linters/markdown/)** - Documentation standards
 - **[JSON Validation](/docs/linters/json/)** - Schema validation and syntax checking
 
