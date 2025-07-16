@@ -32,15 +32,29 @@ sudo mv ccfeedback /usr/local/bin/
 go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
 ```
 
-### 2. Basic Usage
+### 2. Set Up Claude Code Integration
+
+Initialize ccfeedback as a Claude Code hook:
+
+```bash
+# Set up ccfeedback in Claude Code settings
+ccfeedback init
+
+# Preview changes without applying
+ccfeedback init --dry-run
+```
+
+This will configure ccfeedback as a PostToolUse hook in your Claude Code settings.
+
+### 3. Basic Usage
 
 Process a Claude Code hook message:
 
 ```bash
-echo '{"type": "PreToolUse", "tool": "bash", "command": "ls"}' | ccfeedback
+echo '{"hook_event_name": "PostToolUse", "tool_name": "Write", "tool_input": {"file_path": "test.go"}}' | ccfeedback
 ```
 
-### 3. With Configuration
+### 4. With Configuration
 
 Create a basic configuration:
 
@@ -180,12 +194,23 @@ Add to your GitHub Actions:
 
 ### Claude Code Hooks
 
-Set up as a Claude Code hook processor:
+After running `ccfeedback init`, your Claude Code settings will include:
 
 ```json
 {
   "hooks": {
-    "pre_tool_use": "ccfeedback"
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ccfeedback",
+            "timeout": 60000
+          }
+        ]
+      }
+    ]
   }
 }
 ```
