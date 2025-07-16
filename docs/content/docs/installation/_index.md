@@ -12,36 +12,39 @@ CCFeedback provides multiple installation options to fit your workflow.
 
 ## CLI Installation
 
-### Using Go Install (Recommended)
+### Download Pre-built Binary (Recommended)
+
+Download the latest release for your platform from the [releases page](https://github.com/jrossi/ccfeedback/releases).
 
 ```bash
-go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest
-```
-
-### Using Homebrew
-
-```bash
-brew tap jrossi-claude/ccfeedback
-brew install ccfeedback
-```
-
-### Download Binary
-
-Download the latest release from GitHub:
-
-```bash
-curl -L https://github.com/jrossi-claude/ccfeedback/releases/latest/download/ccfeedback-$(uname -s)-$(uname -m) \
-  -o ccfeedback
-chmod +x ccfeedback
+# Linux x86_64
+curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Linux_x86_64.tar.gz | tar xz
 sudo mv ccfeedback /usr/local/bin/
+
+# macOS x86_64
+curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Darwin_x86_64.tar.gz | tar xz
+sudo mv ccfeedback /usr/local/bin/
+
+# macOS arm64 (M1/M2)
+curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Darwin_arm64.tar.gz | tar xz
+sudo mv ccfeedback /usr/local/bin/
+
+# Windows x86_64
+# Download ccfeedback_Windows_x86_64.zip from releases page
+```
+
+### Using Go Install
+
+```bash
+go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
 ```
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/jrossi-claude/ccfeedback.git
+git clone https://github.com/jrossi/ccfeedback.git
 cd ccfeedback
-make build
+make install
 ```
 
 ## Go Library Integration
@@ -49,7 +52,7 @@ make build
 Add CCFeedback to your Go project:
 
 ```bash
-go get github.com/jrossi-claude/ccfeedback
+go get github.com/jrossi/ccfeedback
 ```
 
 ### Basic Usage
@@ -61,21 +64,18 @@ import (
     "context"
     "log"
 
-    "github.com/jrossi-claude/ccfeedback"
+    "github.com/jrossi/ccfeedback"
 )
 
 func main() {
     // Create API instance with default configuration
-    api := ccfeedback.NewAPI()
+    api := ccfeedback.New()
 
-    // Process hook message
-    message := `{"type": "PreToolUse", "tool": "bash", "command": "ls"}`
-    result, err := api.ProcessHookMessage(context.Background(), message)
-    if err != nil {
+    // Process hook message from stdin
+    ctx := context.Background()
+    if err := api.ProcessStdin(ctx); err != nil {
         log.Fatal(err)
     }
-
-    log.Printf("Result: %+v", result)
 }
 ```
 

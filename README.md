@@ -21,14 +21,40 @@ Features automatic Go file formatting validation and test running. Built with
 
 ## Installation
 
+### Download Pre-built Binary (Recommended)
+
+Download the latest release for your platform from the [releases page](https://github.com/jrossi/ccfeedback/releases).
+
 ```bash
+# Linux x86_64
+curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Linux_x86_64.tar.gz | tar xz
+
+# macOS x86_64
+curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Darwin_x86_64.tar.gz | tar xz
+
+# macOS arm64 (M1/M2)
+curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Darwin_arm64.tar.gz | tar xz
+
+# Windows x86_64
+# Download ccfeedback_Windows_x86_64.zip from releases page
+```
+
+### Install with Go
+
+```bash
+# Install the CLI tool
+go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+
+# Use as a library
 go get github.com/jrossi/ccfeedback
 ```
 
-### CLI Tool
+### Build from Source
 
 ```bash
-go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+git clone https://github.com/jrossi/ccfeedback.git
+cd ccfeedback
+make install
 ```
 
 ## Usage

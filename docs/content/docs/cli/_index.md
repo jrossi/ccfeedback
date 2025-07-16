@@ -14,7 +14,7 @@ standalone linting operations.
 ## Installation
 
 ```bash
-go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest
+go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
 ```
 
 ## Basic Usage

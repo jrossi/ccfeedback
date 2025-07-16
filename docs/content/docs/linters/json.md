@@ -309,7 +309,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install ccfeedback
-      run: go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest
+      run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
 
     - name: Validate JSON files
       run: ccfeedback --config .claude/ccfeedback.json

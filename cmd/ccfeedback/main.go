@@ -13,6 +13,14 @@ import (
 	"github.com/jrossi/ccfeedback"
 )
 
+// Build variables injected via ldflags
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+	builtBy = ""
+)
+
 func main() {
 	var (
 		timeout     = flag.Duration("timeout", 60*time.Second, "Hook execution timeout")
@@ -39,7 +47,16 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Println("ccfeedback version 0.1.0")
+		fmt.Printf("ccfeedback version %s\n", version)
+		if commit != "none" {
+			fmt.Printf("  commit: %s\n", commit)
+		}
+		if date != "unknown" {
+			fmt.Printf("  built at: %s\n", date)
+		}
+		if builtBy != "" {
+			fmt.Printf("  built by: %s\n", builtBy)
+		}
 		os.Exit(0)
 	}
 

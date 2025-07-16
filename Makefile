@@ -1,9 +1,21 @@
-.PHONY: all test build clean fmt lint install bench
+.PHONY: all test build clean fmt lint install bench snapshot release
 
+# Build information
 BINARY_NAME=ccfeedback
 GO=go
 GOFLAGS=-trimpath
-LDFLAGS=-s -w
+
+# Version information
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
+DATE ?= $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+# Build flags
+LDFLAGS=-s -w \
+	-X main.version=$(VERSION) \
+	-X main.commit=$(COMMIT) \
+	-X main.date=$(DATE) \
+	-X main.builtBy=make
 
 all: fmt lint test build
 
@@ -29,6 +41,7 @@ install:
 clean:
 	rm -f $(BINARY_NAME)
 	rm -f coverage.out
+	rm -rf dist/
 	$(GO) clean -cache
 
 deps:
@@ -37,3 +50,12 @@ deps:
 
 coverage: test
 	$(GO) tool cover -html=coverage.out -o coverage.html
+
+# GoReleaser targets
+snapshot:
+	@command -v goreleaser > /dev/null || (echo "goreleaser not found. Install from https://goreleaser.com" && exit 1)
+	goreleaser release --snapshot --clean
+
+release:
+	@command -v goreleaser > /dev/null || (echo "goreleaser not found. Install from https://goreleaser.com" && exit 1)
+	goreleaser release --clean

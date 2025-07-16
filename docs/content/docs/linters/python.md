@@ -196,7 +196,7 @@ jobs:
       run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
     - name: Install ccfeedback
-      run: go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest
+      run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
 
     - name: Lint Python code
       run: ccfeedback --config .claude/ccfeedback.json

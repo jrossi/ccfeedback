@@ -1,0 +1,172 @@
+# .goreleaser.yml
+# GoReleaser configuration for ccfeedback
+# Documentation: https://goreleaser.com
+
+version: 2
+
+# Clean dist directory before build
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+# Build configuration
+builds:
+  - id: ccfeedback
+    main: ./cmd/ccfeedback
+    binary: ccfeedback
+    
+    # Custom build flags
+    flags:
+      - -trimpath
+      
+    # Custom ldflags
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
+    
+    # Build for multiple platforms
+    goos:
+      - linux
+      - darwin
+      - windows
+    
+    goarch:
+      - amd64
+      - arm64
+    
+    # Skip certain combinations
+    ignore:
+      - goos: windows
+        goarch: arm64
+    
+    # Set the modified timestamp on the output binary
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    
+    # Environment variables
+    env:
+      - CGO_ENABLED=0
+
+# Archive configuration
+archives:
+  - id: ccfeedback
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    
+    # Archive format
+    format_overrides:
+      - goos: windows
+        format: zip
+    
+    # Files to include in archive
+    files:
+      - README.md
+      - docs/*
+      - examples/*
+    
+    # Use tar.gz for everything else
+    format: tar.gz
+
+# Checksum configuration
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+# Snapshot configuration (for testing)
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+# Changelog configuration
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^style:'
+      - '^refactor:'
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+  groups:
+    - title: 'New Features'
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug Fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: 'Performance Improvements'
+      regexp: "^.*perf[(\\w)]*:+.*$"
+      order: 2
+    - title: 'Security Updates'
+      regexp: "^.*security[(\\w)]*:+.*$"
+      order: 3
+    - title: 'Other Changes'
+      order: 999
+
+# Release configuration
+release:
+  github:
+    owner: jrossi
+    name: ccfeedback
+  
+  # Release name template
+  name_template: "{{.ProjectName}} v{{.Version}}"
+  
+  # If set to true, will not auto-publish the release
+  draft: false
+  
+  # If set to auto, will mark the release as not ready for production
+  # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
+  prerelease: auto
+  
+  # Release notes
+  header: |
+    ## ccfeedback {{.Version}} ({{ .Date }})
+    
+    Welcome to this new release of ccfeedback!
+  
+  footer: |
+    ## Thanks!
+    
+    Those were the changes on {{ .Tag }}. Thank you for using ccfeedback!
+    
+    ### Installation
+    
+    #### Download Binary
+    
+    Download the appropriate binary for your platform from the assets below.
+    
+    #### Install with Go
+    
+    ```bash
+    go install github.com/jrossi/ccfeedback/cmd/ccfeedback@{{.Tag}}
+    ```
+    
+    #### Install with curl (Linux/macOS)
+    
+    ```bash
+    # Linux x86_64
+    curl -L https://github.com/jrossi/ccfeedback/releases/download/{{.Tag}}/ccfeedback_{{.Version}}_Linux_x86_64.tar.gz | tar xz
+    
+    # macOS x86_64
+    curl -L https://github.com/jrossi/ccfeedback/releases/download/{{.Tag}}/ccfeedback_{{.Version}}_Darwin_x86_64.tar.gz | tar xz
+    
+    # macOS arm64 (M1/M2)
+    curl -L https://github.com/jrossi/ccfeedback/releases/download/{{.Tag}}/ccfeedback_{{.Version}}_Darwin_arm64.tar.gz | tar xz
+    ```
+
+# Announce configuration (optional)
+announce:
+  skip: true

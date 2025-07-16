@@ -156,7 +156,7 @@ ccfeedback --config .claude/ccfeedback.json
 # GitHub Actions
 - name: Lint Code
   run: |
-    go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest
+    go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
     ccfeedback --config .claude/ccfeedback.json
 ```
 

@@ -14,7 +14,7 @@ into your applications.
 ## Installation
 
 ```bash
-go get github.com/jrossi-claude/ccfeedback
+go get github.com/jrossi/ccfeedback
 ```
 
 ## Quick Start
@@ -29,7 +29,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/jrossi-claude/ccfeedback"
+    "github.com/jrossi/ccfeedback"
 )
 
 func main() {
@@ -61,7 +61,7 @@ import (
     "context"
     "log"
 
-    "github.com/jrossi-claude/ccfeedback"
+    "github.com/jrossi/ccfeedback"
 )
 
 func main() {
@@ -378,7 +378,7 @@ import (
     "net/http"
     "log"
 
-    "github.com/jrossi-claude/ccfeedback"
+    "github.com/jrossi/ccfeedback"
 )
 
 func main() {
@@ -418,7 +418,7 @@ import (
     "fmt"
     "os"
 
-    "github.com/jrossi-claude/ccfeedback"
+    "github.com/jrossi/ccfeedback"
 )
 
 func main() {
@@ -477,7 +477,7 @@ import (
     "context"
     "testing"
 
-    "github.com/jrossi-claude/ccfeedback"
+    "github.com/jrossi/ccfeedback"
 )
 
 func TestAPIProcessing(t *testing.T) {

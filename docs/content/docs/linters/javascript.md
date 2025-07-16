@@ -261,7 +261,7 @@ jobs:
       run: npm ci
 
     - name: Install ccfeedback
-      run: go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest
+      run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
 
     - name: Lint JavaScript
       run: ccfeedback --config .claude/ccfeedback.json

@@ -20,7 +20,12 @@ Get CCFeedback running in your environment quickly with these examples.
 ### 1. Install CCFeedback
 
 ```bash
-go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest
+# Download pre-built binary (Linux x86_64)
+curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Linux_x86_64.tar.gz | tar xz
+sudo mv ccfeedback /usr/local/bin/
+
+# Or install with Go
+go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
 ```
 
 ### 2. Basic Usage
@@ -71,7 +76,7 @@ ccfeedback --config .claude/ccfeedback.json
 
 ```bash
 go mod init your-project
-go get github.com/jrossi-claude/ccfeedback
+go get github.com/jrossi/ccfeedback
 ```
 
 ### 2. Basic Library Usage
@@ -84,7 +89,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/jrossi-claude/ccfeedback"
+    "github.com/jrossi/ccfeedback"
 )
 
 func main() {
@@ -116,7 +121,7 @@ import (
     "context"
     "log"
 
-    "github.com/jrossi-claude/ccfeedback"
+    "github.com/jrossi/ccfeedback"
 )
 
 func main() {
@@ -165,7 +170,7 @@ Add to your GitHub Actions:
 ```yaml
 - name: Run CCFeedback
   run: |
-    go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest
+    go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
     ccfeedback --config .claude/ccfeedback.json
 ```
 

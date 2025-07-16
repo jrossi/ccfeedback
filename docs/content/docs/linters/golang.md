@@ -211,7 +211,7 @@ jobs:
         sh -s -- -b $(go env GOPATH)/bin v1.55.0
 
     - name: Install ccfeedback
-      run: go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest
+      run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
 
     - name: Lint code
       run: ccfeedback --config .claude/ccfeedback.json
