@@ -162,6 +162,34 @@ ccfeedback -debug
 ccfeedback -config my-config.json
 ```
 
+#### Init Command
+
+Set up ccfeedback in Claude Code settings:
+
+```bash
+# Initialize ccfeedback hooks in Claude Code settings
+ccfeedback init
+
+# Only update global settings (~/.claude/settings.json)
+ccfeedback init --global
+
+# Only update project settings (.claude/settings.json)
+ccfeedback init --project
+
+# Preview changes without applying them
+ccfeedback init --dry-run
+
+# Apply changes without confirmation prompt
+ccfeedback init --force
+```
+
+The init command:
+- Adds ccfeedback as a PostToolUse hook in Claude Code settings
+- Shows proposed changes in diff format before applying
+- Creates timestamped backups of existing settings
+- Preserves all existing configuration and custom fields
+- Detects when ccfeedback is already configured
+
 #### Show Actions Command
 
 Analyze which configuration rules would apply to specific files:

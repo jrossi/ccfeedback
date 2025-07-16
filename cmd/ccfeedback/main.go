@@ -33,6 +33,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "CCFeedback - Claude Code Hooks Feedback System\n\n")
 		fmt.Fprintf(os.Stderr, "Usage: %s [flags] [command] [arguments]\n\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "Commands:\n")
+		fmt.Fprintf(os.Stderr, "  init                    Set up ccfeedback in Claude Code settings\n")
 		fmt.Fprintf(os.Stderr, "  show-actions <file>...  Show which configuration rules would apply to the given files\n")
 		fmt.Fprintf(os.Stderr, "\nFlags:\n")
 		flag.PrintDefaults()
@@ -116,7 +117,46 @@ func main() {
 
 	// Check for subcommands
 	args := flag.Args()
-	if len(args) > 0 && args[0] == "show-actions" {
+	if len(args) > 0 && args[0] == "init" {
+		// Handle init command
+		initOptions := ccfeedback.InitOptions{
+			DryRun: false,
+			Force:  false,
+		}
+
+		// Parse init-specific flags
+		initCmd := flag.NewFlagSet("init", flag.ExitOnError)
+		globalOnly := initCmd.Bool("global", false, "Only update global settings (~/.claude/settings.json)")
+		projectOnly := initCmd.Bool("project", false, "Only update project settings (.claude/settings.json)")
+		dryRun := initCmd.Bool("dry-run", false, "Show what would be changed without applying")
+		force := initCmd.Bool("force", false, "Apply changes without confirmation")
+
+		// Set custom usage for init command
+		initCmd.Usage = func() {
+			fmt.Fprintf(os.Stderr, "Usage: %s init [flags]\n\n", os.Args[0])
+			fmt.Fprintf(os.Stderr, "Set up ccfeedback in Claude Code settings.\n\n")
+			fmt.Fprintf(os.Stderr, "Flags:\n")
+			initCmd.PrintDefaults()
+		}
+
+		// Parse the remaining args
+		if err := initCmd.Parse(args[1:]); err != nil {
+			os.Exit(1)
+		}
+
+		// Set options from flags
+		initOptions.GlobalOnly = *globalOnly
+		initOptions.ProjectOnly = *projectOnly
+		initOptions.DryRun = *dryRun
+		initOptions.Force = *force
+
+		// Run init command
+		if err := ccfeedback.InitCommand(initOptions); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	} else if len(args) > 0 && args[0] == "show-actions" {
 		// Handle show-actions command
 		if len(args) < 2 {
 			fmt.Fprintf(os.Stderr, "Error: show-actions requires at least one file path\n")

@@ -8,8 +8,7 @@ description: >
 
 # CLI Reference
 
-CCFeedback provides a comprehensive command-line interface for processing Claude Code hooks and running
-standalone linting operations.
+CCFeedback provides a command-line interface for processing Claude Code hooks and analyzing linting configurations.
 
 ## Installation
 
@@ -17,348 +16,244 @@ standalone linting operations.
 go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
 ```
 
-## Basic Usage
+## Commands
 
-### Process Hook Messages
+### Default Mode (Hook Processing)
 
-```bash
-# Process from stdin
-echo '{"type": "PreToolUse", "tool": "bash"}' | ccfeedback
-
-# Process with configuration
-ccfeedback --config .claude/ccfeedback.json
-
-# Process specific file
-ccfeedback --file src/main.go
-```
-
-### Configuration
+Process Claude Code hook messages from stdin:
 
 ```bash
-# Use custom config file
-ccfeedback --config path/to/config.json
+# Basic usage - reads from stdin
+ccfeedback
 
-# Validate configuration
-ccfeedback --config .claude/ccfeedback.json --validate
+# With custom timeout
+ccfeedback -timeout 30s
 
-# Show configuration
-ccfeedback --show-config
+# With custom configuration
+ccfeedback -config my-config.json
+
+# Debug mode
+ccfeedback -debug
 ```
 
-## Command Options
+### init Command
 
-### Global Flags
+Set up ccfeedback in Claude Code settings:
+
+```bash
+# Initialize ccfeedback hooks (updates both global and project settings)
+ccfeedback init
+
+# Only update global settings (~/.claude/settings.json)
+ccfeedback init --global
+
+# Only update project settings (.claude/settings.json)
+ccfeedback init --project
+
+# Preview changes without applying them
+ccfeedback init --dry-run
+
+# Apply changes without confirmation prompt
+ccfeedback init --force
+```
+
+The `init` command:
+- Adds ccfeedback as a PostToolUse hook in Claude Code settings
+- Shows proposed changes in diff format before applying
+- Creates timestamped backups of existing settings
+- Preserves all existing configuration and custom fields
+- Detects when ccfeedback is already configured
+
+### show-actions Command
+
+Analyze which configuration rules would apply to specific files:
+
+```bash
+# Show configuration for a single file
+ccfeedback show-actions internal/api.go
+
+# Multiple files
+ccfeedback show-actions src/main.go pkg/util.go README.md
+
+# With custom configuration
+ccfeedback -config team-config.json show-actions pkg/api.go
+
+# Debug mode shows pattern matching details
+ccfeedback -debug show-actions internal/test.go
+```
+
+The `show-actions` command displays:
+- Which linters apply to each file type
+- Base configuration for applicable linters
+- Rule hierarchy showing pattern matching order
+- Final merged configuration after all rules are applied
+- Configuration file loading order (in debug mode)
+
+## Global Flags
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--config` | Configuration file path | Auto-detect |
-| `--verbose` | Enable verbose output | false |
-| `--quiet` | Suppress non-error output | false |
-| `--version` | Show version information | - |
-| `--help` | Show help message | - |
+| `-config` | Path to configuration file | Auto-detect |
+| `-debug` | Enable debug output | false |
+| `-timeout` | Hook execution timeout | 60s |
+| `-version` | Show version information | - |
 
-### Processing Flags
+## Exit Codes
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--file` | Process specific file | stdin |
-| `--filter` | File pattern filter | all |
-| `--dry-run` | Show what would be processed | false |
-| `--fix` | Auto-fix issues when possible | false |
+| Code | Description | Usage |
+|------|-------------|-------|
+| 0 | Success | Output shown in transcript (stdout) |
+| 1 | Non-blocking error | General errors |
+| 2 | Blocking error | Feedback processed by Claude (stderr) |
 
-### Output Flags
+## Configuration
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--format` | Output format (json, text, compact) | text |
-| `--no-color` | Disable color output | false |
-| `--profile` | Enable performance profiling | false |
+CCFeedback looks for configuration files in the following order:
+1. `~/.claude/ccfeedback.json` (user global)
+2. `.claude/ccfeedback.json` (project-specific)
+3. `.claude/ccfeedback.local.json` (local overrides, git-ignored)
+4. File specified with `-config` flag
 
-## Configuration Commands
+## Hook Processing
 
-### Show Configuration
+### Processing Flow
 
-Display current configuration:
+1. Read hook message from stdin
+2. Parse message type (PreToolUse, PostToolUse, etc.)
+3. Apply configured rules based on tool and file patterns
+4. Run applicable linters for file operations
+5. Return response with decision and feedback
 
-```bash
-ccfeedback --show-config
+### Example Hook Message
+
+```json
+{
+  "session_id": "123",
+  "hook_event_name": "PostToolUse",
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "src/main.go",
+    "content": "package main\n\nfunc main() {\n\t// code\n}"
+  }
+}
 ```
 
-Example output:
+### Example Response
+
+```json
+{
+  "decision": "approve",
+  "message": "✅ Style clean. Continue with your task."
+}
+```
+
+## Integration Examples
+
+### Claude Code Settings
+
+After running `ccfeedback init`, your Claude Code settings will include:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ccfeedback",
+            "timeout": 60000,
+            "continueOnError": false
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Project Configuration
+
+Example `.claude/ccfeedback.json`:
+
 ```json
 {
   "linters": {
     "golang": {
       "enabled": true,
       "config": {
-        "fastMode": true,
-        "testTimeout": "5m"
+        "golangciConfig": ".golangci.yml"
+      }
+    },
+    "markdown": {
+      "enabled": true,
+      "config": {
+        "maxLineLength": 120
       }
     }
   },
-  "parallel": {
-    "maxWorkers": 4
-  }
-}
-```
-
-### Validate Configuration
-
-Check configuration syntax and settings:
-
-```bash
-ccfeedback --config .claude/ccfeedback.json --validate
-```
-
-### Show Available Actions
-
-Display configured rule hierarchy:
-
-```bash
-ccfeedback --show-actions
-```
-
-## File Processing
-
-### Single File
-
-Process a specific file:
-
-```bash
-ccfeedback --file src/main.go
-ccfeedback --file docs/README.md
-ccfeedback --file config.json
-```
-
-### File Patterns
-
-Process files matching patterns:
-
-```bash
-ccfeedback --filter "*.go"
-ccfeedback --filter "src/**/*.js"
-ccfeedback --filter "docs/*.md"
-```
-
-### Directory Processing
-
-Process all files in a directory:
-
-```bash
-find src -name "*.go" -exec ccfeedback --file {} \;
-```
-
-## Output Formats
-
-### Text Format (Default)
-
-Human-readable output with colors:
-
-```bash
-ccfeedback --format text
-```
-
-Example output:
-```
-✓ src/main.go: All checks passed
-✗ src/config.go: 2 issues found
-  - Line 15: unused variable 'x'
-  - Line 23: missing error check
-```
-
-### JSON Format
-
-Machine-readable JSON output:
-
-```bash
-ccfeedback --format json
-```
-
-Example output:
-```json
-{
-  "files": [
+  "rules": [
     {
-      "path": "src/main.go",
-      "status": "passed",
-      "issues": []
-    },
-    {
-      "path": "src/config.go",
-      "status": "failed",
-      "issues": [
-        {
-          "line": 15,
-          "message": "unused variable 'x'",
-          "severity": "warning"
-        }
-      ]
+      "pattern": "**/*_test.go",
+      "linter": "golang",
+      "rules": {
+        "disabledChecks": ["line-length"]
+      }
     }
   ]
 }
-```
-
-### Compact Format
-
-Minimal output for CI/CD:
-
-```bash
-ccfeedback --format compact
-```
-
-Example output:
-```
-src/main.go: PASS
-src/config.go: FAIL (2 issues)
-```
-
-## Hook Processing
-
-### Standard Input
-
-Process Claude Code hook messages from stdin:
-
-```bash
-echo '{"type": "PreToolUse", "tool": "bash", "command": "go build"}' | ccfeedback
-```
-
-### File Input
-
-Process hook message from file:
-
-```bash
-ccfeedback < hook-message.json
-```
-
-### Interactive Mode
-
-Process multiple hook messages interactively:
-
-```bash
-ccfeedback --interactive
-```
-
-## Advanced Usage
-
-### Performance Profiling
-
-Enable performance profiling:
-
-```bash
-ccfeedback --profile --config .claude/ccfeedback.json
-```
-
-### Debug Mode
-
-Enable verbose debugging output:
-
-```bash
-ccfeedback --verbose --config .claude/ccfeedback.json
-```
-
-### Dry Run
-
-See what would be processed without executing:
-
-```bash
-ccfeedback --dry-run --filter "*.go"
-```
-
-## Exit Codes
-
-| Code | Description |
-|------|-------------|
-| 0 | Success - all checks passed |
-| 1 | Linting issues found |
-| 2 | Configuration error |
-| 3 | File not found |
-| 4 | Permission error |
-| 5 | Timeout error |
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `CCFEEDBACK_CONFIG` | Default config file path | auto-detect |
-| `CCFEEDBACK_VERBOSE` | Enable verbose output | false |
-| `CCFEEDBACK_NO_COLOR` | Disable color output | false |
-| `CCFEEDBACK_TIMEOUT` | Default timeout | 5m |
-
-## Integration Examples
-
-### Pre-commit Hook
-
-```bash
-#!/bin/bash
-# .git/hooks/pre-commit
-exec ccfeedback --config .claude/ccfeedback.json
-```
-
-### CI/CD Pipeline
-
-```yaml
-- name: Run CCFeedback
-  run: |
-    ccfeedback --config .claude/ccfeedback.json --format json > results.json
-    if [ $? -ne 0 ]; then
-      cat results.json
-      exit 1
-    fi
-```
-
-### Make Target
-
-```makefile
-lint:
-	ccfeedback --config .claude/ccfeedback.json
-
-lint-fix:
-	ccfeedback --config .claude/ccfeedback.json --fix
-
-lint-ci:
-	ccfeedback --config .claude/ccfeedback.json --format compact
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### Configuration Not Found
+#### ccfeedback not found
+
+Ensure ccfeedback is in your PATH:
 
 ```bash
-ccfeedback --show-config
-# Shows current config file location and contents
+# Check installation
+which ccfeedback
+
+# Add Go bin to PATH if needed
+export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
-#### Permission Errors
+#### Configuration not loaded
+
+Check which configuration files are being loaded:
 
 ```bash
-# Ensure ccfeedback has execute permissions
-chmod +x $(which ccfeedback)
+ccfeedback -debug show-actions test.go
 ```
 
-#### Timeout Issues
+#### Hook not triggering
+
+Verify Claude Code settings:
 
 ```bash
-# Increase timeout for large projects
-ccfeedback --config .claude/ccfeedback.json --timeout 10m
+# Check if hook is configured
+cat ~/.claude/settings.json | jq '.hooks.PostToolUse'
+
+# Re-run init if needed
+ccfeedback init
 ```
 
 ### Getting Help
 
 ```bash
-# Show help for all commands
-ccfeedback --help
+# Show usage
+ccfeedback -help
 
-# Show version information
-ccfeedback --version
-
-# Show current configuration
-ccfeedback --show-config
+# Show version
+ccfeedback -version
 ```
 
 ## Related Documentation
 
-- [Installation Guide](/docs/installation/) - Installation methods
-- [Configuration Guide](/docs/configuration/) - Configuration options
-- [Quick Start](/docs/quickstart/) - Getting started examples
+- [Installation Guide](/docs/installation/) - Detailed installation instructions
+- [Configuration Guide](/docs/configuration/) - Configuration options and examples
+- [Quick Start](/docs/quickstart/) - Getting started guide
+- [Linters](/docs/linters/) - Available linters and their options
