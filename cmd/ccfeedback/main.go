@@ -33,7 +33,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [flags] [command] [arguments]\n\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "Commands:\n")
 		fmt.Fprintf(os.Stderr, "  init                    Set up ccfeedback in Claude Code settings\n")
-		fmt.Fprintf(os.Stderr, "  show-actions <file>...  Show which configuration rules would apply to the given files\n")
+		fmt.Fprintf(os.Stderr, "  show <command>          Show various information (config, filter, setup, linters)\n")
 		fmt.Fprintf(os.Stderr, "\nFlags:\n")
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "\nDefault behavior (no command):\n")
@@ -144,7 +144,7 @@ func main() {
 			os.Exit(1)
 		}
 		os.Exit(0)
-	} else if len(args) > 0 && args[0] == "show-actions" {
+	} else if len(args) > 0 && (args[0] == "show" || args[0] == "show-actions") {
 		// Dispatch to ccfeedback-show binary
 		subcommand := "ccfeedback-show"
 
@@ -158,7 +158,14 @@ func main() {
 			}
 		}
 
-		cmd := exec.Command(subcommand, args[1:]...) // #nosec G204 - subcommand is controlled
+		// Handle backward compatibility for show-actions
+		showArgs := args[1:]
+		if args[0] == "show-actions" {
+			// Convert "show-actions <file>" to "show filter <file>"
+			showArgs = append([]string{"filter"}, args[1:]...)
+		}
+
+		cmd := exec.Command(subcommand, showArgs...) // #nosec G204 - subcommand is controlled
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr

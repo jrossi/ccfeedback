@@ -12,22 +12,26 @@ import (
 )
 
 func main() {
-	// Define flags
+	// Define global flags
 	debug := flag.Bool("debug", false, "Enable debug output")
 	configFile := flag.String("config", "", "Path to configuration file")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: ccfeedback-show [options] <file>...\n\n")
-		fmt.Fprintf(os.Stderr, "Show which configuration rules would apply to the given files\n\n")
-		fmt.Fprintf(os.Stderr, "Options:\n")
+		fmt.Fprintf(os.Stderr, "Usage: ccfeedback-show [options] <command> [arguments]\n\n")
+		fmt.Fprintf(os.Stderr, "Commands:\n")
+		fmt.Fprintf(os.Stderr, "  config          Show current configuration\n")
+		fmt.Fprintf(os.Stderr, "  filter <file>   Show which rules and linters apply to a file\n")
+		fmt.Fprintf(os.Stderr, "  setup           Show setup status and configuration paths\n")
+		fmt.Fprintf(os.Stderr, "  linters         Show available linters and their status\n")
+		fmt.Fprintf(os.Stderr, "\nOptions:\n")
 		flag.PrintDefaults()
 	}
 
 	flag.Parse()
 
-	// Check for required arguments
+	// Check for required command
 	if flag.NArg() < 1 {
-		fmt.Fprintf(os.Stderr, "Error: show-actions requires at least one file path\n")
+		fmt.Fprintf(os.Stderr, "Error: no command specified\n\n")
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -82,17 +86,72 @@ func main() {
 		ruleEngine.SetAppConfig(appConfig)
 	}
 
-	// Process each file
-	for _, filePath := range flag.Args() {
-		if err := showActionsForFile(filePath, ruleEngine, *debug); err != nil {
-			fmt.Fprintf(os.Stderr, "Error processing %s: %v\n", filePath, err)
+	// Handle commands
+	command := flag.Args()[0]
+	switch command {
+	case "config":
+		if err := showConfig(appConfig, *debug); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
+	case "filter":
+		if flag.NArg() < 2 {
+			fmt.Fprintf(os.Stderr, "Error: filter command requires a file path\n")
+			os.Exit(1)
+		}
+		if err := showFilter(flag.Args()[1], ruleEngine, *debug); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	case "setup":
+		if err := showSetup(appConfig, *debug); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	case "linters":
+		if err := showLinters(ruleEngine, appConfig, *debug); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	default:
+		fmt.Fprintf(os.Stderr, "Error: unknown command '%s'\n\n", command)
+		flag.Usage()
+		os.Exit(1)
 	}
 }
 
-// showActionsForFile displays which configuration rules would apply to the given file
-func showActionsForFile(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, debug bool) error {
+// showConfig displays the current configuration
+func showConfig(appConfig *ccfeedback.AppConfig, debug bool) error {
+	fmt.Println("=== Current Configuration ===")
+
+	if appConfig == nil {
+		fmt.Println("\nNo configuration loaded.")
+		return nil
+	}
+
+	// Pretty print the configuration
+	configJSON, err := json.MarshalIndent(appConfig, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	fmt.Println()
+	fmt.Println(string(configJSON))
+
+	if debug {
+		fmt.Println("\n--- Configuration Sources ---")
+		fmt.Println("Configuration files are loaded in this order (later files override earlier):")
+		fmt.Println("1. ~/.claude/ccfeedback.json (global)")
+		fmt.Println("2. .claude/ccfeedback.json (project)")
+		fmt.Println("3. .claude/ccfeedback.local.json (local overrides)")
+		fmt.Println("4. --config flag (if specified)")
+	}
+
+	return nil
+}
+
+// showFilter shows which rules and linters apply to a specific file
+func showFilter(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, debug bool) error {
 	// Check if file exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return fmt.Errorf("file does not exist: %s", filePath)
@@ -104,7 +163,7 @@ func showActionsForFile(filePath string, ruleEngine *ccfeedback.LintingRuleEngin
 		return fmt.Errorf("failed to get absolute path: %w", err)
 	}
 
-	fmt.Printf("\n=== Configuration Analysis for: %s ===\n", absPath)
+	fmt.Printf("=== Filter Analysis for: %s ===\n", absPath)
 
 	// Get the app config from the rule engine
 	appConfig := ruleEngine.GetAppConfig()
@@ -118,16 +177,30 @@ func showActionsForFile(filePath string, ruleEngine *ccfeedback.LintingRuleEngin
 	ext := filepath.Ext(filePath)
 	applicableLinters := []string{}
 
-	switch ext {
-	case ".go":
-		applicableLinters = append(applicableLinters, "golang")
-		fmt.Printf("✓ golang linter (handles .go files)\n")
-	case ".md", ".markdown":
-		applicableLinters = append(applicableLinters, "markdown")
-		fmt.Printf("✓ markdown linter (handles .md files)\n")
-	default:
+	// Check all possible linters
+	linterMap := map[string][]string{
+		".go":       {"golang"},
+		".md":       {"markdown"},
+		".markdown": {"markdown"},
+		".js":       {"javascript"},
+		".jsx":      {"javascript"},
+		".ts":       {"javascript"},
+		".tsx":      {"javascript"},
+		".py":       {"python"},
+		".rs":       {"rust"},
+		".proto":    {"protobuf"},
+		".json":     {"json"},
+		".jsonc":    {"json"},
+		".json5":    {"json"},
+	}
+
+	if linters, ok := linterMap[ext]; ok {
+		for _, linter := range linters {
+			applicableLinters = append(applicableLinters, linter)
+			fmt.Printf("✓ %s linter (handles %s files)\n", linter, ext)
+		}
+	} else {
 		fmt.Printf("ℹ️  No linters configured for %s files\n", ext)
-		return nil
 	}
 
 	// Show base configuration for each applicable linter
@@ -228,17 +301,287 @@ func showActionsForFile(filePath string, ruleEngine *ccfeedback.LintingRuleEngin
 		}
 	}
 
-	// Show config file locations if in debug mode
+	return nil
+}
+
+// showSetup displays setup status and configuration paths
+func showSetup(appConfig *ccfeedback.AppConfig, debug bool) error {
+	fmt.Println("=== CCFeedback Setup Status ===")
+
+	// Check ccfeedback binary
+	fmt.Println("\n--- Binary Status ---")
+	if isCCFeedbackAvailable() {
+		fmt.Println("✓ ccfeedback is available in PATH")
+	} else {
+		fmt.Println("✗ ccfeedback not found in PATH")
+		fmt.Println("  Run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback")
+	}
+
+	// Check configuration files
+	fmt.Println("\n--- Configuration Files ---")
+	homeDir, _ := os.UserHomeDir()
+	configs := []struct {
+		path string
+		desc string
+	}{
+		{filepath.Join(homeDir, ".claude", "ccfeedback.json"), "Global config"},
+		{".claude/ccfeedback.json", "Project config"},
+		{".claude/ccfeedback.local.json", "Local overrides"},
+	}
+
+	foundConfig := false
+	for _, cfg := range configs {
+		if _, err := os.Stat(cfg.path); err == nil {
+			fmt.Printf("✓ %s: %s\n", cfg.desc, cfg.path)
+			foundConfig = true
+		} else {
+			fmt.Printf("  %s: not found\n", cfg.desc)
+		}
+	}
+
+	if !foundConfig {
+		fmt.Println("\nℹ️  No configuration files found. Using defaults.")
+	}
+
+	// Check Claude settings
+	fmt.Println("\n--- Claude Integration ---")
+	claudeSettings := []string{
+		filepath.Join(homeDir, ".claude", "settings.json"),
+		".claude/settings.json",
+	}
+
+	foundSettings := false
+	for _, settingsPath := range claudeSettings {
+		if data, err := os.ReadFile(settingsPath); err == nil {
+			var settings map[string]interface{}
+			if err := json.Unmarshal(data, &settings); err == nil {
+				if hooks, ok := settings["hooks"].(map[string]interface{}); ok {
+					if postToolUse, ok := hooks["PostToolUse"].([]interface{}); ok {
+						for _, group := range postToolUse {
+							if g, ok := group.(map[string]interface{}); ok {
+								if hookList, ok := g["hooks"].([]interface{}); ok {
+									for _, hook := range hookList {
+										if h, ok := hook.(map[string]interface{}); ok {
+											if cmd, ok := h["command"].(string); ok && strings.Contains(cmd, "ccfeedback") {
+												fmt.Printf("✓ Hook configured in: %s\n", settingsPath)
+												foundSettings = true
+												break
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if !foundSettings {
+		fmt.Println("✗ No ccfeedback hooks found in Claude settings")
+		fmt.Println("  Run: ccfeedback init")
+	}
+
+	// Show current configuration summary
+	if appConfig != nil {
+		fmt.Println("\n--- Configuration Summary ---")
+
+		// Count enabled linters
+		enabledCount := 0
+		totalCount := 0
+		if appConfig.Linters != nil {
+			for _, linterCfg := range appConfig.Linters {
+				totalCount++
+				// LinterConfig has json.RawMessage, so we need to check the raw config
+				if linterCfgJSON, err := json.Marshal(linterCfg); err == nil {
+					var cfg map[string]interface{}
+					if err := json.Unmarshal(linterCfgJSON, &cfg); err == nil {
+						if enabled, ok := cfg["enabled"].(bool); !ok || enabled {
+							enabledCount++
+						}
+					} else {
+						enabledCount++ // Default to enabled
+					}
+				} else {
+					enabledCount++ // Default to enabled
+				}
+			}
+		}
+		fmt.Printf("Linters: %d enabled / %d configured\n", enabledCount, totalCount)
+
+		// Count rules
+		fmt.Printf("Rules: %d pattern-based overrides\n", len(appConfig.Rules))
+
+		// Show timeout
+		if appConfig.Timeout != nil {
+			fmt.Printf("Timeout: %s\n", appConfig.Timeout.Duration)
+		}
+
+		// Show parallel config
+		if appConfig.Parallel != nil {
+			if appConfig.Parallel.DisableParallel != nil && *appConfig.Parallel.DisableParallel {
+				fmt.Println("Parallel: disabled")
+			} else if appConfig.Parallel.MaxWorkers != nil {
+				fmt.Printf("Parallel: enabled (max %d workers)\n", *appConfig.Parallel.MaxWorkers)
+			}
+		}
+	}
+
 	if debug {
-		fmt.Printf("\n--- Configuration Sources ---\n")
-		fmt.Printf("Configuration files are loaded in this order (later files override earlier):\n")
-		fmt.Printf("1. ~/.claude/ccfeedback.json\n")
-		fmt.Printf("2. .claude/ccfeedback.json (project root)\n")
-		fmt.Printf("3. .claude/ccfeedback.local.json (project root)\n")
-		fmt.Printf("4. --config flag (if specified)\n")
+		fmt.Println("\n--- Environment ---")
+		fmt.Printf("Current directory: %s\n", mustGetwd())
+		fmt.Printf("Home directory: %s\n", homeDir)
+		fmt.Printf("PATH: %s\n", os.Getenv("PATH"))
 	}
 
 	return nil
+}
+
+// showLinters displays available linters and their status
+func showLinters(ruleEngine *ccfeedback.LintingRuleEngine, appConfig *ccfeedback.AppConfig, debug bool) error {
+	fmt.Println("=== Available Linters ===")
+
+	// Define all known linters with their details
+	linters := []struct {
+		name        string
+		extensions  []string
+		description string
+		tool        string
+	}{
+		{
+			name:        "golang",
+			extensions:  []string{".go"},
+			description: "Go code linter using golangci-lint",
+			tool:        "golangci-lint",
+		},
+		{
+			name:        "markdown",
+			extensions:  []string{".md", ".markdown"},
+			description: "Markdown linter checking formatting and style",
+			tool:        "built-in",
+		},
+		{
+			name:        "javascript",
+			extensions:  []string{".js", ".jsx", ".ts", ".tsx"},
+			description: "JavaScript/TypeScript linter using ESLint",
+			tool:        "eslint",
+		},
+		{
+			name:        "python",
+			extensions:  []string{".py"},
+			description: "Python linter using ruff",
+			tool:        "ruff",
+		},
+		{
+			name:        "rust",
+			extensions:  []string{".rs"},
+			description: "Rust linter using cargo check and clippy",
+			tool:        "cargo",
+		},
+		{
+			name:        "protobuf",
+			extensions:  []string{".proto"},
+			description: "Protocol Buffer linter using buf",
+			tool:        "buf",
+		},
+		{
+			name:        "json",
+			extensions:  []string{".json", ".jsonc", ".json5"},
+			description: "JSON syntax and formatting checker",
+			tool:        "built-in",
+		},
+	}
+
+	for _, linter := range linters {
+		fmt.Printf("\n--- %s ---\n", linter.name)
+		fmt.Printf("Description: %s\n", linter.description)
+		fmt.Printf("File types: %s\n", strings.Join(linter.extensions, ", "))
+		fmt.Printf("Tool: %s\n", linter.tool)
+
+		// Check if enabled in config
+		if appConfig != nil {
+			if appConfig.IsLinterEnabled(linter.name) {
+				fmt.Printf("Status: ✓ Enabled\n")
+			} else {
+				fmt.Printf("Status: ✗ Disabled\n")
+			}
+
+			// Show configuration if present
+			if linterConfig, exists := appConfig.GetLinterConfig(linter.name); exists {
+				var configMap map[string]interface{}
+				if err := json.Unmarshal(linterConfig, &configMap); err == nil && len(configMap) > 0 {
+					fmt.Println("Configuration:")
+					for key, value := range configMap {
+						if key != "enabled" { // Don't show enabled again
+							fmt.Printf("  %s: %v\n", key, value)
+						}
+					}
+				}
+			}
+		} else {
+			fmt.Printf("Status: ✓ Enabled (default)\n")
+		}
+
+		// Check if tool is available
+		if linter.tool != "built-in" {
+			if isToolAvailable(linter.tool) {
+				fmt.Printf("Tool availability: ✓ %s found\n", linter.tool)
+			} else {
+				fmt.Printf("Tool availability: ✗ %s not found in PATH\n", linter.tool)
+			}
+		}
+	}
+
+	if debug {
+		fmt.Println("\n--- Debug Info ---")
+		fmt.Printf("Total linters available: %d\n", len(linters))
+		if appConfig != nil && appConfig.Linters != nil {
+			fmt.Printf("Linters in config: %d\n", len(appConfig.Linters))
+		}
+	}
+
+	return nil
+}
+
+// Helper functions
+
+func isCCFeedbackAvailable() bool {
+	paths := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
+	for _, path := range paths {
+		fullPath := filepath.Join(path, "ccfeedback")
+		if _, err := os.Stat(fullPath); err == nil {
+			return true
+		}
+		// Check with .exe extension on Windows
+		if _, err := os.Stat(fullPath + ".exe"); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func isToolAvailable(tool string) bool {
+	paths := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
+	for _, path := range paths {
+		fullPath := filepath.Join(path, tool)
+		if _, err := os.Stat(fullPath); err == nil {
+			return true
+		}
+		// Check with .exe extension on Windows
+		if _, err := os.Stat(fullPath + ".exe"); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func mustGetwd() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "unknown"
+	}
+	return wd
 }
 
 // MatchesPattern checks if a file path matches a glob pattern
@@ -337,3 +680,4 @@ func MatchesSimplePattern(pattern, name string) bool {
 	matched, _ := filepath.Match(pattern, name)
 	return matched
 }
+
