@@ -144,6 +144,13 @@ release:
     
     ### Installation
     
+    #### Install with Homebrew (macOS/Linux)
+    
+    ```bash
+    brew tap jrossi/ccfeedback
+    brew install ccfeedback
+    ```
+    
     #### Download Binary
     
     Download the appropriate binary for your platform from the assets below.
@@ -166,6 +173,50 @@ release:
     # macOS arm64 (M1/M2)
     curl -L https://github.com/jrossi/ccfeedback/releases/download/{{.Tag}}/ccfeedback_{{.Version}}_Darwin_arm64.tar.gz | tar xz
     ```
+
+# Homebrew tap configuration
+brews:
+  - name: ccfeedback
+    
+    # GitHub repository to push the formula to
+    repository:
+      owner: jrossi
+      name: ccfeedback
+      branch: main
+    
+    # Directory to store the formula in the repository
+    directory: HomebrewFormula
+    
+    # Git commit information
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    
+    # Commit message template
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    
+    # Homepage
+    homepage: "https://github.com/jrossi/ccfeedback"
+    
+    # Description
+    description: "Claude Code Feedback - Real-time linting feedback for AI code editors"
+    
+    # License
+    license: "Apache-2.0"
+    
+    # Dependencies
+    dependencies: []
+    
+    # Installation script
+    install: |
+      bin.install "ccfeedback"
+    
+    # Test script
+    test: |
+      system "#{bin}/ccfeedback", "--version"
+    
+    # Skip upload (set to false when ready to publish)
+    skip_upload: false
 
 # Announce configuration (optional)
 announce:
