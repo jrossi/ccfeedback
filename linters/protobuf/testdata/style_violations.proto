@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+// Missing package version suffix (buf will warn about this)
+package example;
+
+// Service name doesn't end with "Service" (style violation)
+service ExampleAPI {
+  // RPC name should be PascalCase
+  rpc get_example(GetExampleRequest) returns (GetExampleResponse) {}
+}
+
+// Message with style issues
+message getExampleRequest {  // Should be PascalCase
+  // Field names should be lower_snake_case
+  string ID = 1;  // Should be "id"
+  string userName = 2;  // Should be "user_name"
+  
+  // Enum should be defined at top level or have proper naming
+  enum Status {
+    UNKNOWN = 0;  // Should have enum name prefix
+    ACTIVE = 1;
+    INACTIVE = 2;
+  }
+  
+  Status status = 3;
+}
+
+message GetExampleResponse {
+  // Using reserved field numbers
+  string data = 19000;  // buf warns about reserved field numbers
+}

@@ -13,6 +13,7 @@ import (
 	"github.com/jrossi/ccfeedback/linters/javascript"
 	jsonlinter "github.com/jrossi/ccfeedback/linters/json"
 	"github.com/jrossi/ccfeedback/linters/markdown"
+	"github.com/jrossi/ccfeedback/linters/protobuf"
 	"github.com/jrossi/ccfeedback/linters/python"
 	"github.com/jrossi/ccfeedback/linters/rust"
 )
@@ -57,6 +58,7 @@ func NewLintingRuleEngineWithConfig(config LintingConfig) *LintingRuleEngine {
 	engine.linters = append(engine.linters, javascript.NewJavaScriptLinter())
 	engine.linters = append(engine.linters, jsonlinter.NewJSONLinter())
 	engine.linters = append(engine.linters, markdown.NewMarkdownLinter())
+	engine.linters = append(engine.linters, protobuf.NewProtobufLinter())
 	engine.linters = append(engine.linters, python.NewPythonLinter())
 	engine.linters = append(engine.linters, rust.NewRustLinter())
 

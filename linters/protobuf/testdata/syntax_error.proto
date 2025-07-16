@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package example.v1;
+
+// Missing semicolon on purpose
+option go_package = "github.com/example/api/example/v1;examplev1"
+
+// Invalid message definition - missing opening brace
+message BrokenMessage
+  string id = 1;
+  string name = 2;
+}
+
+// Service with syntax error
+service BrokenService {
+  // Missing return type
+  rpc GetSomething(GetRequest);
+}

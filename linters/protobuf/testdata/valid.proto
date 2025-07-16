@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package example.v1;
+
+option go_package = "github.com/example/api/example/v1;examplev1";
+
+// ExampleService provides example operations
+service ExampleService {
+  // GetExample retrieves an example by ID
+  rpc GetExample(GetExampleRequest) returns (GetExampleResponse) {}
+  
+  // ListExamples returns a list of examples
+  rpc ListExamples(ListExamplesRequest) returns (ListExamplesResponse) {}
+}
+
+// GetExampleRequest is the request for GetExample
+message GetExampleRequest {
+  // The ID of the example to retrieve
+  string id = 1;
+}
+
+// GetExampleResponse is the response for GetExample
+message GetExampleResponse {
+  // The retrieved example
+  Example example = 1;
+}
+
+// ListExamplesRequest is the request for ListExamples
+message ListExamplesRequest {
+  // The maximum number of examples to return
+  int32 page_size = 1;
+  
+  // The page token for pagination
+  string page_token = 2;
+}
+
+// ListExamplesResponse is the response for ListExamples
+message ListExamplesResponse {
+  // The list of examples
+  repeated Example examples = 1;
+  
+  // The token for the next page
+  string next_page_token = 2;
+}
+
+// Example represents an example resource
+message Example {
+  // The unique identifier
+  string id = 1;
+  
+  // The name of the example
+  string name = 2;
+  
+  // The description of the example
+  string description = 3;
+  
+  // When the example was created
+  string created_at = 4;
+  
+  // When the example was last updated
+  string updated_at = 5;
+}
