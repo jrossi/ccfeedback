@@ -226,7 +226,7 @@ func showActionsForFile(filePath string, ruleEngine *ccfeedback.LintingRuleEngin
 	matchedRules := false
 	for i, rule := range appConfig.Rules {
 		// Check if this rule matches the file
-		matched := matchesPattern(rule.Pattern, absPath)
+		matched := MatchesPattern(rule.Pattern, absPath)
 
 		if debug && !matched {
 			fmt.Printf("   Pattern '%s' did not match '%s'\n", rule.Pattern, absPath)
@@ -304,9 +304,9 @@ func showActionsForFile(filePath string, ruleEngine *ccfeedback.LintingRuleEngin
 	return nil
 }
 
-// matchesPattern checks if a file path matches a glob pattern
+// MatchesPattern checks if a file path matches a glob pattern
 // It supports ** for matching any number of directories
-func matchesPattern(pattern, path string) bool {
+func MatchesPattern(pattern, path string) bool {
 	// For absolute paths, also try relative matching from current directory
 	relPath := path
 	if filepath.IsAbs(path) {
@@ -331,7 +331,7 @@ func matchesPattern(pattern, path string) bool {
 
 		// Handle ** patterns
 		if strings.Contains(pattern, "**") {
-			if matchesDoubleStarPattern(pattern, p) {
+			if MatchesDoubleStarPattern(pattern, p) {
 				return true
 			}
 		}
@@ -340,8 +340,8 @@ func matchesPattern(pattern, path string) bool {
 	return false
 }
 
-// matchesDoubleStarPattern handles patterns with ** for directory wildcards
-func matchesDoubleStarPattern(pattern, path string) bool {
+// MatchesDoubleStarPattern handles patterns with ** for directory wildcards
+func MatchesDoubleStarPattern(pattern, path string) bool {
 	// Convert ** to a regex-like pattern
 	// e.g., "internal/**/*.go" should match "internal/foo/bar.go"
 	parts := strings.Split(pattern, "**")
@@ -360,7 +360,7 @@ func matchesDoubleStarPattern(pattern, path string) bool {
 				}
 			}
 			// Also check just the filename
-			return matchesSimplePattern(suffix, filepath.Base(path))
+			return MatchesSimplePattern(suffix, filepath.Base(path))
 		}
 
 		// Check if path starts with prefix
@@ -395,8 +395,8 @@ func matchesDoubleStarPattern(pattern, path string) bool {
 	return false
 }
 
-// matchesSimplePattern is a helper for simple pattern matching
-func matchesSimplePattern(pattern, name string) bool {
+// MatchesSimplePattern is a helper for simple pattern matching
+func MatchesSimplePattern(pattern, name string) bool {
 	matched, _ := filepath.Match(pattern, name)
 	return matched
 }
