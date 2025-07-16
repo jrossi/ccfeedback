@@ -5,21 +5,21 @@
 class Ccfeedback < Formula
   desc "Claude Code Feedback - Real-time linting feedback for AI code editors"
   homepage "https://jeremyrossi.com/ccfeedback/docs/"
-  version "0.1.7"
+  version "0.2.0"
   license "Apache-2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/jrossi/ccfeedback/releases/download/v0.1.7/ccfeedback_0.1.7_Darwin_x86_64.tar.gz"
-      sha256 "9355b839f57e4bad5774950cd0af99371a4fb7cd07728b6bea6b33f5521ff370"
+      url "https://github.com/jrossi/ccfeedback/releases/download/v0.2.0/ccfeedback_0.2.0_Darwin_x86_64.tar.gz"
+      sha256 "350827868eb4c9ea36bc263b040e36172bd231a5db351d36af0a3b02d2b07420"
 
       def install
         bin.install "ccfeedback"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/jrossi/ccfeedback/releases/download/v0.1.7/ccfeedback_0.1.7_Darwin_arm64.tar.gz"
-      sha256 "700dee44e2f479685f0aec9507f088c8fab01a29e6e763858ea3476ed42010d7"
+      url "https://github.com/jrossi/ccfeedback/releases/download/v0.2.0/ccfeedback_0.2.0_Darwin_arm64.tar.gz"
+      sha256 "c646a51687d6688da0271e469f216d797c61c37e77414f7f7ac860db1535bf4d"
 
       def install
         bin.install "ccfeedback"
@@ -29,15 +29,15 @@ class Ccfeedback < Formula
 
   on_linux do
     if Hardware::CPU.intel? and Hardware::CPU.is_64_bit?
-      url "https://github.com/jrossi/ccfeedback/releases/download/v0.1.7/ccfeedback_0.1.7_Linux_x86_64.tar.gz"
-      sha256 "9fa7afa7c1f9bd0f607414e9f5cb45c3a2ad27cce63c0408a21cd1c769a3fe1d"
+      url "https://github.com/jrossi/ccfeedback/releases/download/v0.2.0/ccfeedback_0.2.0_Linux_x86_64.tar.gz"
+      sha256 "2c062085e017691984bcd04bd91b48cc21728a6eba6e38c88aaca1b6eb055543"
       def install
         bin.install "ccfeedback"
       end
     end
     if Hardware::CPU.arm? and Hardware::CPU.is_64_bit?
-      url "https://github.com/jrossi/ccfeedback/releases/download/v0.1.7/ccfeedback_0.1.7_Linux_arm64.tar.gz"
-      sha256 "5d6321e7cd295d0bf5f3a4a5c63398c5ce04407e5966c1bc9c857c1bc0db85e2"
+      url "https://github.com/jrossi/ccfeedback/releases/download/v0.2.0/ccfeedback_0.2.0_Linux_arm64.tar.gz"
+      sha256 "811d72867ab7b94b371360b1aa73660efdef9cda57ad3a40201e7cdd37330b27"
       def install
         bin.install "ccfeedback"
       end
