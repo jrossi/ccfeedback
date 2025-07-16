@@ -22,7 +22,11 @@ func TestGetCacheManager(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get working directory: %v", err)
 	}
-	defer os.Chdir(oldWd)
+	defer func() {
+		if err := os.Chdir(oldWd); err != nil {
+			t.Errorf("Failed to restore working directory: %v", err)
+		}
+	}()
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatalf("Failed to change directory: %v", err)
@@ -403,9 +407,18 @@ func TestFindClaudeDir(t *testing.T) {
 
 	// Test creating new .claude directory
 	newWorkDir := t.TempDir()
-	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(newWorkDir)
+	oldWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get working directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(oldWd); err != nil {
+			t.Errorf("Failed to restore working directory: %v", err)
+		}
+	}()
+	if err := os.Chdir(newWorkDir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
 
 	found, err = findClaudeDir(newWorkDir)
 	if err != nil {
@@ -448,7 +461,7 @@ func BenchmarkCacheManager_Save(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		manager.save()
+		_ = manager.save()
 	}
 }
 
@@ -462,7 +475,7 @@ func BenchmarkCacheManager_Load(b *testing.B) {
 		cachePath: cachePath,
 	}
 	manager.createNewCache()
-	manager.save()
+	_ = manager.save()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -470,6 +483,6 @@ func BenchmarkCacheManager_Load(b *testing.B) {
 			gitRoot:   tmpDir,
 			cachePath: cachePath,
 		}
-		newManager.loadCache()
+		_ = newManager.loadCache()
 	}
 }

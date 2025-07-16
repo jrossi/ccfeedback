@@ -33,7 +33,8 @@ fmt:
 	gofmt -s -w .
 
 lint:
-	$(HOME)/go/bin/golangci-lint run ./...
+	@which golangci-lint > /dev/null 2>&1 || (echo "golangci-lint not found, installing..." && go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
+	golangci-lint run ./...
 
 install:
 	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/ccfeedback
