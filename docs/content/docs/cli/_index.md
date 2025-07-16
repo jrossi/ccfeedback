@@ -55,6 +55,12 @@ ccfeedback init --dry-run
 
 # Apply changes without confirmation prompt
 ccfeedback init --force
+
+# Configure for specific tools only
+ccfeedback init --matcher "Write"    # Only for Write tool
+ccfeedback init --matcher "Edit"     # Only for Edit tool
+ccfeedback init --matcher "Bash"     # Only for Bash tool
+ccfeedback init --matcher ""         # All tools (default)
 ```
 
 The `init` command:

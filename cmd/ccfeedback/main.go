@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -118,41 +119,30 @@ func main() {
 	// Check for subcommands
 	args := flag.Args()
 	if len(args) > 0 && args[0] == "init" {
-		// Handle init command
-		initOptions := ccfeedback.InitOptions{
-			DryRun: false,
-			Force:  false,
+		// Dispatch to ccfeedback-init binary
+		subcommand := "ccfeedback-init"
+
+		// Try to find the subcommand in the same directory as the main binary
+		execPath, err := os.Executable()
+		if err == nil {
+			dir := filepath.Dir(execPath)
+			localSubcommand := filepath.Join(dir, subcommand)
+			if _, err := os.Stat(localSubcommand); err == nil {
+				subcommand = localSubcommand
+			}
 		}
 
-		// Parse init-specific flags
-		initCmd := flag.NewFlagSet("init", flag.ExitOnError)
-		globalOnly := initCmd.Bool("global", false, "Only update global settings (~/.claude/settings.json)")
-		projectOnly := initCmd.Bool("project", false, "Only update project settings (.claude/settings.json)")
-		dryRun := initCmd.Bool("dry-run", false, "Show what would be changed without applying")
-		force := initCmd.Bool("force", false, "Apply changes without confirmation")
+		cmd := exec.Command(subcommand, args[1:]...)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Env = os.Environ()
 
-		// Set custom usage for init command
-		initCmd.Usage = func() {
-			fmt.Fprintf(os.Stderr, "Usage: %s init [flags]\n\n", os.Args[0])
-			fmt.Fprintf(os.Stderr, "Set up ccfeedback in Claude Code settings.\n\n")
-			fmt.Fprintf(os.Stderr, "Flags:\n")
-			initCmd.PrintDefaults()
-		}
-
-		// Parse the remaining args
-		if err := initCmd.Parse(args[1:]); err != nil {
-			os.Exit(1)
-		}
-
-		// Set options from flags
-		initOptions.GlobalOnly = *globalOnly
-		initOptions.ProjectOnly = *projectOnly
-		initOptions.DryRun = *dryRun
-		initOptions.Force = *force
-
-		// Run init command
-		if err := ccfeedback.InitCommand(initOptions); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		if err := cmd.Run(); err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				os.Exit(exitErr.ExitCode())
+			}
+			fmt.Fprintf(os.Stderr, "Error: failed to execute %s: %v\n", subcommand, err)
 			os.Exit(1)
 		}
 		os.Exit(0)

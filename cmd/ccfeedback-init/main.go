@@ -1,7 +1,8 @@
-package ccfeedback
+package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -39,16 +40,31 @@ type ClaudeHookConfig struct {
 	ContinueOnError bool   `json:"continueOnError,omitempty"`
 }
 
-// InitOptions contains options for the init command
-type InitOptions struct {
-	GlobalOnly  bool
-	ProjectOnly bool
-	DryRun      bool
-	Force       bool
+func main() {
+	// Define flags
+	globalOnly := flag.Bool("global", false, "Only update global settings (~/.claude/settings.json)")
+	projectOnly := flag.Bool("project", false, "Only update project settings (.claude/settings.json)")
+	dryRun := flag.Bool("dry-run", false, "Show what would be changed without applying")
+	force := flag.Bool("force", false, "Apply changes without confirmation")
+	matcher := flag.String("matcher", "", "Tool matcher pattern (empty string matches all tools)")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: ccfeedback-init [options]\n\n")
+		fmt.Fprintf(os.Stderr, "Initialize ccfeedback hooks in Claude Code settings\n\n")
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		flag.PrintDefaults()
+	}
+
+	flag.Parse()
+
+	// Run init command
+	if err := runInit(*globalOnly, *projectOnly, *dryRun, *force, *matcher); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 }
 
-// InitCommand handles the ccfeedback init command
-func InitCommand(options InitOptions) error {
+func runInit(globalOnly, projectOnly, dryRun, force bool, matcher string) error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("failed to get home directory: %w", err)
@@ -56,11 +72,11 @@ func InitCommand(options InitOptions) error {
 
 	// Determine which settings files to update
 	var settingsPaths []string
-	if !options.ProjectOnly {
+	if !projectOnly {
 		globalPath := filepath.Join(homeDir, ".claude", "settings.json")
 		settingsPaths = append(settingsPaths, globalPath)
 	}
-	if !options.GlobalOnly {
+	if !globalOnly {
 		projectPath := filepath.Join(".claude", "settings.json")
 		settingsPaths = append(settingsPaths, projectPath)
 	}
@@ -77,7 +93,7 @@ func InitCommand(options InitOptions) error {
 	// Process each settings file
 	for _, settingsPath := range settingsPaths {
 		fmt.Printf("Processing: %s\n", settingsPath)
-		wasModified, err := processSettingsFile(settingsPath, options)
+		wasModified, err := processSettingsFile(settingsPath, matcher, dryRun, force)
 		if err != nil {
 			return fmt.Errorf("failed to process %s: %w", settingsPath, err)
 		}
@@ -88,15 +104,15 @@ func InitCommand(options InitOptions) error {
 	}
 
 	// Show next steps only if changes were actually made
-	if !options.DryRun && changesMade {
-		showNextSteps(options)
+	if !dryRun && changesMade {
+		showNextSteps()
 	}
 
 	return nil
 }
 
 // processSettingsFile handles a single settings file
-func processSettingsFile(settingsPath string, options InitOptions) (bool, error) {
+func processSettingsFile(settingsPath, matcher string, dryRun, force bool) (bool, error) {
 	// Read existing settings
 	settings, extraFields, err := readClaudeSettings(settingsPath)
 	if err != nil && !os.IsNotExist(err) {
@@ -107,7 +123,7 @@ func processSettingsFile(settingsPath string, options InitOptions) (bool, error)
 	originalJSON, _ := marshalClaudeSettings(settings, extraFields)
 
 	// Propose changes
-	modified := proposeHookChanges(settings)
+	modified := proposeHookChanges(settings, matcher)
 
 	// Marshal the modified settings
 	modifiedJSON, err := marshalClaudeSettings(modified, extraFields)
@@ -125,13 +141,13 @@ func processSettingsFile(settingsPath string, options InitOptions) (bool, error)
 	fmt.Println("\nProposed changes:")
 	displayChanges(originalJSON, modifiedJSON)
 
-	if options.DryRun {
+	if dryRun {
 		fmt.Println("\n(Dry run - no changes were made)")
 		return false, nil
 	}
 
 	// Ask for confirmation unless forced
-	if !options.Force {
+	if !force {
 		fmt.Print("\nApply these changes? [y/N]: ")
 		reader := bufio.NewReader(os.Stdin)
 		response, _ := reader.ReadString('\n')
@@ -210,7 +226,7 @@ func readClaudeSettings(path string) (*ClaudeSettings, map[string]json.RawMessag
 }
 
 // proposeHookChanges adds or updates ccfeedback hook configuration
-func proposeHookChanges(settings *ClaudeSettings) *ClaudeSettings {
+func proposeHookChanges(settings *ClaudeSettings, matcher string) *ClaudeSettings {
 	// Make a copy
 	modified := &ClaudeSettings{
 		Permissions: settings.Permissions,
@@ -230,10 +246,12 @@ func proposeHookChanges(settings *ClaudeSettings) *ClaudeSettings {
 		postToolUseGroups = []HookGroup{}
 	}
 
-	// Look for existing ccfeedback hook
+	// Look for existing ccfeedback hook with the same matcher
 	ccfeedbackFound := false
+	targetMatcher := matcher // Use the matcher from options
+
 	for i, group := range postToolUseGroups {
-		if group.Matcher == "" {
+		if group.Matcher == targetMatcher {
 			for j, hook := range group.Hooks {
 				if hook.Type == "command" && hook.Command == "ccfeedback" {
 					// Update existing hook with recommended settings
@@ -252,11 +270,11 @@ func proposeHookChanges(settings *ClaudeSettings) *ClaudeSettings {
 
 	// If not found, add it
 	if !ccfeedbackFound {
-		// Look for existing empty matcher group
-		emptyMatcherIndex := -1
+		// Look for existing group with target matcher
+		targetMatcherIndex := -1
 		for i, group := range postToolUseGroups {
-			if group.Matcher == "" {
-				emptyMatcherIndex = i
+			if group.Matcher == targetMatcher {
+				targetMatcherIndex = i
 				break
 			}
 		}
@@ -268,16 +286,16 @@ func proposeHookChanges(settings *ClaudeSettings) *ClaudeSettings {
 			ContinueOnError: false,
 		}
 
-		if emptyMatcherIndex >= 0 {
+		if targetMatcherIndex >= 0 {
 			// Add to existing group
-			postToolUseGroups[emptyMatcherIndex].Hooks = append(
-				postToolUseGroups[emptyMatcherIndex].Hooks,
+			postToolUseGroups[targetMatcherIndex].Hooks = append(
+				postToolUseGroups[targetMatcherIndex].Hooks,
 				ccfeedbackHook,
 			)
 		} else {
 			// Create new group
 			postToolUseGroups = append(postToolUseGroups, HookGroup{
-				Matcher: "",
+				Matcher: targetMatcher,
 				Hooks:   []ClaudeHookConfig{ccfeedbackHook},
 			})
 		}
@@ -411,7 +429,7 @@ func displayChanges(original, modified []byte) {
 }
 
 // showNextSteps displays instructions for next steps
-func showNextSteps(options InitOptions) {
+func showNextSteps() {
 	fmt.Println("\n✅ CCFeedback has been configured for Claude Code!")
 	fmt.Println("\nNext steps:")
 	fmt.Println("1. Create a ccfeedback configuration file:")
