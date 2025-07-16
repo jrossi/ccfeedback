@@ -24,8 +24,8 @@ Features automatic Go file formatting validation and test running. Built with
 ### Install with Homebrew (macOS/Linux)
 
 ```bash
-brew tap jrossi/ccfeedback
-brew install ccfeedback
+brew tap jrossi/ccfeedback https://github.com/jrossi/ccfeedback
+brew install jrossi/ccfeedback/ccfeedback
 ```
 
 ### Download Pre-built Binary

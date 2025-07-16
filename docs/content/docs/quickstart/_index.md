@@ -21,8 +21,8 @@ Get CCFeedback running in your environment quickly with these examples.
 
 ```bash
 # Install with Homebrew (macOS/Linux)
-brew tap jrossi/ccfeedback
-brew install ccfeedback
+brew tap jrossi/ccfeedback https://github.com/jrossi/ccfeedback
+brew install jrossi/ccfeedback/ccfeedback
 
 # Or download pre-built binary (Linux x86_64)
 curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Linux_x86_64.tar.gz | tar xz

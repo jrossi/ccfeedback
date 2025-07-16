@@ -15,8 +15,8 @@ CCFeedback provides multiple installation options to fit your workflow.
 ### Install with Homebrew (Recommended for macOS/Linux)
 
 ```bash
-brew tap jrossi/ccfeedback
-brew install ccfeedback
+brew tap jrossi/ccfeedback https://github.com/jrossi/ccfeedback
+brew install jrossi/ccfeedback/ccfeedback
 ```
 
 ### Download Pre-built Binary
