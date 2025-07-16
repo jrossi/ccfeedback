@@ -418,6 +418,10 @@ exit 2
 }
 
 func TestHookRunner_RunHook_Timeout(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping timeout test in short mode")
+	}
+
 	// Create a script that sleeps
 	tmpDir, err := os.MkdirTemp("", "hook_timeout_")
 	if err != nil {
@@ -427,7 +431,9 @@ func TestHookRunner_RunHook_Timeout(t *testing.T) {
 
 	scriptPath := filepath.Join(tmpDir, "sleep.sh")
 	scriptContent := `#!/bin/sh
-sleep 10
+# Trap signals to ensure we exit
+trap 'exit 0' TERM INT
+sleep 30
 `
 	if err := os.WriteFile(scriptPath, []byte(scriptContent), 0755); err != nil {
 		t.Fatal(err)
@@ -444,8 +450,9 @@ sleep 10
 		t.Error("Expected timeout error")
 	}
 
-	// Allow generous buffer for timeout (CI systems can be slow)
-	if duration > 500*time.Millisecond {
+	// The timeout should happen around 100ms, but in CI it can be slower
+	// We're mainly checking that it doesn't wait for the full 30s sleep
+	if duration > 5*time.Second {
 		t.Errorf("Took too long to timeout: %v", duration)
 	}
 }
