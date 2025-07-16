@@ -22,6 +22,7 @@ all: fmt lint test build
 build:
 	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY_NAME) ./cmd/ccfeedback
 	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-init ./cmd/ccfeedback-init
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-show ./cmd/ccfeedback-show
 
 test:
 	$(GO) test -v -race -coverprofile=coverage.out ./...
@@ -40,10 +41,12 @@ lint:
 install:
 	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/ccfeedback
 	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/ccfeedback-init
+	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/ccfeedback-show
 
 clean:
 	rm -f $(BINARY_NAME)
 	rm -f $(BINARY_NAME)-init
+	rm -f $(BINARY_NAME)-show
 	rm -f coverage.out
 	rm -rf dist/
 	$(GO) clean -cache
