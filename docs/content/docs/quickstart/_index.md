@@ -20,7 +20,11 @@ Get CCFeedback running in your environment quickly with these examples.
 ### 1. Install CCFeedback
 
 ```bash
-# Download pre-built binary (Linux x86_64)
+# Install with Homebrew (macOS/Linux)
+brew tap jrossi/ccfeedback
+brew install ccfeedback
+
+# Or download pre-built binary (Linux x86_64)
 curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Linux_x86_64.tar.gz | tar xz
 sudo mv ccfeedback /usr/local/bin/
 
@@ -188,7 +192,7 @@ Set up as a Claude Code hook processor:
 
 ## What's Next?
 
-- [Configuration Guide](/docs/configuration/) - Detailed configuration options
-- [CLI Reference](/docs/cli/) - Complete command documentation
-- [Library API](/docs/library/) - Full Go API reference
-- [Linter Documentation](/docs/linters/) - Language-specific linting guides
+- [Configuration Guide](../configuration/) - Detailed configuration options
+- [CLI Reference](../cli-reference/) - Complete command documentation
+- [Library API](../library/) - Full Go API reference
+- [Linter Documentation](../linters/) - Language-specific linting guides

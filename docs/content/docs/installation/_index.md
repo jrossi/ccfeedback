@@ -12,7 +12,14 @@ CCFeedback provides multiple installation options to fit your workflow.
 
 ## CLI Installation
 
-### Download Pre-built Binary (Recommended)
+### Install with Homebrew (Recommended for macOS/Linux)
+
+```bash
+brew tap jrossi/ccfeedback
+brew install ccfeedback
+```
+
+### Download Pre-built Binary
 
 Download the latest release for your platform from the [releases page](https://github.com/jrossi/ccfeedback/releases).
 
@@ -89,6 +96,6 @@ ccfeedback --version
 
 ## Next Steps
 
-- [Quick Start Guide](/docs/quickstart/) - Get started with basic usage
-- [Configuration](/docs/configuration/) - Set up your linting rules
-- [CLI Reference](/docs/cli/) - Complete command documentation
+- [Quick Start Guide](../quickstart/) - Get started with basic usage
+- [Configuration](../configuration/) - Set up your linting rules
+- [CLI Reference](../cli-reference/) - Complete command documentation
