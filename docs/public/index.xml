@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>CCFeedback on CCFeedback Documentation</title><link>http://jeremyrossi.com/ccfeedback/</link><description>Recent content in CCFeedback on CCFeedback Documentation</description><generator>Hugo</generator><language>en-us</language><atom:link href="http://jeremyrossi.com/ccfeedback/index.xml" rel="self" type="application/rss+xml"/><item><title>Go Linting</title><link>http://jeremyrossi.com/ccfeedback/linters/golang/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://jeremyrossi.com/ccfeedback/linters/golang/</guid><description>&lt;h1 id="go-linting">Go Linting&lt;/h1>
-&lt;p>CCFeedback provides comprehensive Go linting through golangci-lint integration with intelligent fallback
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Gismo Documentation</title><link>http://gismo.run/</link><description>Recent content on Gismo Documentation</description><generator>Hugo</generator><language>en-us</language><atom:link href="http://gismo.run/index.xml" rel="self" type="application/rss+xml"/><item><title>Go Linting</title><link>http://gismo.run/docs/linters/golang/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://gismo.run/docs/linters/golang/</guid><description>&lt;h1 id="go-linting">Go Linting&lt;/h1>
+&lt;p>Gismo provides comprehensive Go linting through golangci-lint integration with intelligent fallback
 capabilities.&lt;/p>
 &lt;h2 id="features">Features&lt;/h2>
 &lt;ul>
@@ -172,8 +172,8 @@ staticcheck, typecheck, unconvert, unused, gosec&lt;/li>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;fastMode&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Fast mode uses golangci-lint&amp;rsquo;s &lt;code>--fast&lt;/code> flag for optimal performance when linting individual files.&lt;/p></description></item><item><title>Python Linting</title><link>http://jeremyrossi.com/ccfeedback/linters/python/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://jeremyrossi.com/ccfeedback/linters/python/</guid><description>&lt;h1 id="python-linting">Python Linting&lt;/h1>
-&lt;p>CCFeedback provides modern Python linting through UV/UVX toolchain integration with ruff for fast,
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Fast mode uses golangci-lint&amp;rsquo;s &lt;code>--fast&lt;/code> flag for optimal performance when linting individual files.&lt;/p></description></item><item><title>Python Linting</title><link>http://gismo.run/docs/linters/python/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://gismo.run/docs/linters/python/</guid><description>&lt;h1 id="python-linting">Python Linting&lt;/h1>
+&lt;p>Gismo provides modern Python linting through UV/UVX toolchain integration with ruff for fast,
 comprehensive code analysis.&lt;/p>
 &lt;h2 id="features">Features&lt;/h2>
 &lt;ul>
@@ -322,8 +322,8 @@ comprehensive code analysis.&lt;/p>
 &lt;/table>
 &lt;h2 id="tool-configuration">Tool Configuration&lt;/h2>
 &lt;h3 id="uvuvx-setup">UV/UVX Setup&lt;/h3>
-&lt;p>CCFeedback automatically detects and uses UV/UVX when available:&lt;/p></description></item><item><title>Markdown Linting</title><link>http://jeremyrossi.com/ccfeedback/linters/markdown/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://jeremyrossi.com/ccfeedback/linters/markdown/</guid><description>&lt;h1 id="markdown-linting">Markdown Linting&lt;/h1>
-&lt;p>CCFeedback provides comprehensive markdown linting using the goldmark parser with support for frontmatter
+&lt;p>Gismo automatically detects and uses UV/UVX when available:&lt;/p></description></item><item><title>Markdown Linting</title><link>http://gismo.run/docs/linters/markdown/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://gismo.run/docs/linters/markdown/</guid><description>&lt;h1 id="markdown-linting">Markdown Linting&lt;/h1>
+&lt;p>Gismo provides comprehensive markdown linting using the goldmark parser with support for frontmatter
 validation and documentation standards enforcement.&lt;/p>
 &lt;h2 id="features">Features&lt;/h2>
 &lt;ul>
@@ -494,8 +494,8 @@ validation and documentation standards enforcement.&lt;/p>
 &lt;/table>
 &lt;h2 id="frontmatter-schema-validation">Frontmatter Schema Validation&lt;/h2>
 &lt;h3 id="schema-definition">Schema Definition&lt;/h3>
-&lt;p>Create a JSON schema for frontmatter validation:&lt;/p></description></item><item><title>JavaScript Linting</title><link>http://jeremyrossi.com/ccfeedback/linters/javascript/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://jeremyrossi.com/ccfeedback/linters/javascript/</guid><description>&lt;h1 id="javascript-linting">JavaScript Linting&lt;/h1>
-&lt;p>CCFeedback provides JavaScript and TypeScript linting through ESLint integration with support for modern
+&lt;p>Create a JSON schema for frontmatter validation:&lt;/p></description></item><item><title>JavaScript Linting</title><link>http://gismo.run/docs/linters/javascript/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://gismo.run/docs/linters/javascript/</guid><description>&lt;h1 id="javascript-linting">JavaScript Linting&lt;/h1>
+&lt;p>Gismo provides JavaScript and TypeScript linting through ESLint integration with support for modern
 JavaScript features and TypeScript syntax.&lt;/p>
 &lt;h2 id="features">Features&lt;/h2>
 &lt;ul>
@@ -727,7 +727,7 @@ JavaScript features and TypeScript syntax.&lt;/p>
 &lt;h3 id="packagejson-scripts">Package.json Scripts&lt;/h3>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;scripts&amp;#34;&lt;/span>: {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;lint&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;ccfeedback --config .claude/ccfeedback.json&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;lint&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;gismo --config .claude/gismo.json&amp;#34;&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;lint:js&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;eslint src/**/*.{js,jsx,ts,tsx}&amp;#34;&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;lint:fix&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;eslint --fix src/**/*.{js,jsx,ts,tsx}&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
@@ -740,7 +740,7 @@ JavaScript features and TypeScript syntax.&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>changed_files&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">$(&lt;/span>git diff --cached --name-only --diff-filter&lt;span style="color:#f92672">=&lt;/span>ACM | grep -E &lt;span style="color:#e6db74">&amp;#39;\.(js|jsx|ts|tsx)$&amp;#39;&lt;/span>&lt;span style="color:#66d9ef">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#f92672">[&lt;/span> -n &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$changed_files&lt;span style="color:#e6db74">&amp;#34;&lt;/span> &lt;span style="color:#f92672">]&lt;/span>; &lt;span style="color:#66d9ef">then&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> file in $changed_files; &lt;span style="color:#66d9ef">do&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ccfeedback --file &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$file&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> gismo --file &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$file&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">done&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fi&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="cicd-pipeline">CI/CD Pipeline&lt;/h3>
@@ -762,11 +762,11 @@ JavaScript features and TypeScript syntax.&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Install dependencies&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">npm ci&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Install ccfeedback&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Install gismo&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">go install github.com/jrossi/gismo/cmd/gismo@latest&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Lint JavaScript&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">ccfeedback --config .claude/ccfeedback.json&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">gismo --config .claude/gismo.json&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="project-specific-configurations">Project-Specific Configurations&lt;/h2>
 &lt;h3 id="nodejs-backend">Node.js Backend&lt;/h3>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
@@ -822,8 +822,8 @@ JavaScript features and TypeScript syntax.&lt;/p>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="troubleshooting">Troubleshooting&lt;/h2>
 &lt;h3 id="common-issues">Common Issues&lt;/h3>
 &lt;h4 id="eslint-not-found">ESLint Not Found&lt;/h4>
-&lt;p>Install ESLint and required plugins:&lt;/p></description></item><item><title>JSON Validation</title><link>http://jeremyrossi.com/ccfeedback/linters/json/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://jeremyrossi.com/ccfeedback/linters/json/</guid><description>&lt;h1 id="json-validation">JSON Validation&lt;/h1>
-&lt;p>CCFeedback provides comprehensive JSON validation using high-performance go-json parsing with optional
+&lt;p>Install ESLint and required plugins:&lt;/p></description></item><item><title>JSON Validation</title><link>http://gismo.run/docs/linters/json/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://gismo.run/docs/linters/json/</guid><description>&lt;h1 id="json-validation">JSON Validation&lt;/h1>
+&lt;p>Gismo provides comprehensive JSON validation using high-performance go-json parsing with optional
 JSON schema validation for structured data validation.&lt;/p>
 &lt;h2 id="features">Features&lt;/h2>
 &lt;ul>
@@ -1100,17 +1100,17 @@ JSON schema validation for structured data validation.&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>changed_files&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">$(&lt;/span>git diff --cached --name-only --diff-filter&lt;span style="color:#f92672">=&lt;/span>ACM | grep &lt;span style="color:#e6db74">&amp;#39;\.json$\|\.jsonl$&amp;#39;&lt;/span>&lt;span style="color:#66d9ef">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#f92672">[&lt;/span> -n &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$changed_files&lt;span style="color:#e6db74">&amp;#34;&lt;/span> &lt;span style="color:#f92672">]&lt;/span>; &lt;span style="color:#66d9ef">then&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> file in $changed_files; &lt;span style="color:#66d9ef">do&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ccfeedback --file &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$file&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> gismo --file &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$file&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">done&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fi&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="makefile-integration">Makefile Integration&lt;/h3>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-makefile" data-lang="makefile">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">.PHONY&lt;/span>&lt;span style="color:#f92672">:&lt;/span> validate-json lint-config
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">validate-json&lt;/span>&lt;span style="color:#f92672">:&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	ccfeedback --config .claude/ccfeedback.json --filter&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;*.json&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	gismo --config .claude/gismo.json --filter&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;*.json&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">lint-config&lt;/span>&lt;span style="color:#f92672">:&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	find config -name &lt;span style="color:#e6db74">&amp;#34;*.json&amp;#34;&lt;/span> -exec ccfeedback --file &lt;span style="color:#f92672">{}&lt;/span> &lt;span style="color:#ae81ff">\;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	find config -name &lt;span style="color:#e6db74">&amp;#34;*.json&amp;#34;&lt;/span> -exec gismo --file &lt;span style="color:#f92672">{}&lt;/span> &lt;span style="color:#ae81ff">\;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">validate-schemas&lt;/span>&lt;span style="color:#f92672">:&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	find schemas -name &lt;span style="color:#e6db74">&amp;#34;*.json&amp;#34;&lt;/span> -exec jsonschema --check &lt;span style="color:#f92672">{}&lt;/span> &lt;span style="color:#ae81ff">\;&lt;/span>
@@ -1126,11 +1126,11 @@ JSON schema validation for structured data validation.&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">steps&lt;/span>:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">uses&lt;/span>: &lt;span style="color:#ae81ff">actions/checkout@v4&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Install ccfeedback&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">go install github.com/jrossi-claude/ccfeedback/cmd/ccfeedback@latest&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Install gismo&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">go install github.com/jrossi/gismo/cmd/gismo@latest&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Validate JSON files&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">ccfeedback --config .claude/ccfeedback.json&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: &lt;span style="color:#ae81ff">gismo --config .claude/gismo.json&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Validate schemas&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">run&lt;/span>: |&lt;span style="color:#e6db74">
@@ -1185,4 +1185,254 @@ JSON schema validation for structured data validation.&lt;/p>
  &lt;/tbody>
 &lt;/table>
 &lt;h3 id="error-messages">Error Messages&lt;/h3>
-&lt;p>CCFeedback provides detailed error messages:&lt;/p></description></item></channel></rss>
+&lt;p>Gismo provides detailed error messages:&lt;/p></description></item><item><title>Rust</title><link>http://gismo.run/docs/linters/rust/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://gismo.run/docs/linters/rust/</guid><description>&lt;h1 id="rust-linting">Rust Linting&lt;/h1>
+&lt;p>Gismo provides comprehensive Rust linting support using cargo&amp;rsquo;s built-in tools: &lt;code>cargo clippy&lt;/code> for linting
+and &lt;code>cargo fmt&lt;/code> for formatting checks.&lt;/p>
+&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
+&lt;ul>
+&lt;li>Rust toolchain installed (cargo, rustc, clippy, rustfmt)&lt;/li>
+&lt;li>Project must have a &lt;code>Cargo.toml&lt;/code> file&lt;/li>
+&lt;/ul>
+&lt;h2 id="features">Features&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Clippy Integration&lt;/strong>: Runs cargo clippy with configurable lints&lt;/li>
+&lt;li>&lt;strong>Format Checking&lt;/strong>: Validates code formatting with rustfmt&lt;/li>
+&lt;li>&lt;strong>Test Execution&lt;/strong>: Automatically runs tests in files containing &lt;code>#[test]&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Workspace Support&lt;/strong>: Detects and handles Cargo workspaces&lt;/li>
+&lt;li>&lt;strong>Fast Mode&lt;/strong>: Uses &lt;code>--no-deps&lt;/code> by default to lint only your code&lt;/li>
+&lt;/ul>
+&lt;h2 id="configuration">Configuration&lt;/h2>
+&lt;h3 id="basic-configuration">Basic Configuration&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;linters&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;rust&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;enabled&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="advanced-configuration">Advanced Configuration&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;linters&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;rust&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;enabled&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;config&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;noDeps&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;allTargets&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;allFeatures&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;features&amp;#34;&lt;/span>: [&lt;span style="color:#e6db74">&amp;#34;async&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;serde&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;disabledLints&amp;#34;&lt;/span>: [&lt;span style="color:#e6db74">&amp;#34;dead_code&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;unused_variables&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;enabledLints&amp;#34;&lt;/span>: [&lt;span style="color:#e6db74">&amp;#34;clippy::pedantic&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;clippy::nursery&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;testTimeout&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;5m&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;clippyConfig&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;path/to/clippy.toml&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;rustfmtConfig&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;path/to/rustfmt.toml&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="configuration-options">Configuration Options&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Option&lt;/th>
+ &lt;th>Type&lt;/th>
+ &lt;th>Default&lt;/th>
+ &lt;th>Description&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;code>noDeps&lt;/code>&lt;/td>
+ &lt;td>boolean&lt;/td>
+ &lt;td>&lt;code>true&lt;/code>&lt;/td>
+ &lt;td>Run clippy only on the given crate, without linting dependencies&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>allTargets&lt;/code>&lt;/td>
+ &lt;td>boolean&lt;/td>
+ &lt;td>&lt;code>true&lt;/code>&lt;/td>
+ &lt;td>Check all targets (lib, bin, test, example, etc.)&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>allFeatures&lt;/code>&lt;/td>
+ &lt;td>boolean&lt;/td>
+ &lt;td>&lt;code>false&lt;/code>&lt;/td>
+ &lt;td>Activate all available features&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>features&lt;/code>&lt;/td>
+ &lt;td>string[]&lt;/td>
+ &lt;td>&lt;code>[]&lt;/code>&lt;/td>
+ &lt;td>List of features to activate&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>disabledLints&lt;/code>&lt;/td>
+ &lt;td>string[]&lt;/td>
+ &lt;td>&lt;code>[]&lt;/code>&lt;/td>
+ &lt;td>Clippy lints to disable&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>enabledLints&lt;/code>&lt;/td>
+ &lt;td>string[]&lt;/td>
+ &lt;td>&lt;code>[]&lt;/code>&lt;/td>
+ &lt;td>Additional clippy lints to enable&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>testTimeout&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>&lt;code>&amp;quot;10m&amp;quot;&lt;/code>&lt;/td>
+ &lt;td>Timeout for running tests&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>clippyConfig&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>Path to custom clippy.toml&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>rustfmtConfig&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>Path to custom rustfmt.toml&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="clippy-lints">Clippy Lints&lt;/h2>
+&lt;h3 id="enabling-additional-lints">Enabling Additional Lints&lt;/h3>
+&lt;p>Enable stricter linting with clippy lint groups:&lt;/p></description></item><item><title>Protocol Buffers</title><link>http://gismo.run/docs/linters/protobuf/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://gismo.run/docs/linters/protobuf/</guid><description>&lt;h1 id="protocol-buffer-linting">Protocol Buffer Linting&lt;/h1>
+&lt;p>Gismo provides comprehensive Protocol Buffer linting support using industry-standard tools:
+&lt;code>buf&lt;/code> for modern linting, &lt;code>protolint&lt;/code> as an alternative, and &lt;code>protoc&lt;/code> for basic syntax validation.&lt;/p>
+&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
+&lt;p>At least one of the following tools should be installed:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>buf&lt;/strong> (recommended) - Modern protobuf linter with excellent error messages&lt;/li>
+&lt;li>&lt;strong>protolint&lt;/strong> - Alternative linter with different rule sets&lt;/li>
+&lt;li>&lt;strong>protoc&lt;/strong> - Protocol buffer compiler (for basic syntax validation)&lt;/li>
+&lt;/ul>
+&lt;h2 id="features">Features&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Multi-Tool Support&lt;/strong>: Automatically detects and uses available tools&lt;/li>
+&lt;li>&lt;strong>buf Integration&lt;/strong>: Full support for buf.yaml and buf.work.yaml configurations&lt;/li>
+&lt;li>&lt;strong>Style Enforcement&lt;/strong>: Checks naming conventions, package structure, and more&lt;/li>
+&lt;li>&lt;strong>Syntax Validation&lt;/strong>: Ensures proto files compile correctly&lt;/li>
+&lt;li>&lt;strong>Workspace Support&lt;/strong>: Handles buf workspaces and complex project structures&lt;/li>
+&lt;li>&lt;strong>Graceful Degradation&lt;/strong>: Falls back to simpler tools when advanced ones aren&amp;rsquo;t available&lt;/li>
+&lt;/ul>
+&lt;h2 id="configuration">Configuration&lt;/h2>
+&lt;h3 id="basic-configuration">Basic Configuration&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;linters&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;protobuf&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;enabled&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="advanced-configuration">Advanced Configuration&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;linters&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;protobuf&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;enabled&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;config&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;preferredTools&amp;#34;&lt;/span>: [&lt;span style="color:#e6db74">&amp;#34;buf&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;protolint&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;bufConfigPath&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;./buf.yaml&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;disabledChecks&amp;#34;&lt;/span>: [&lt;span style="color:#e6db74">&amp;#34;PACKAGE_VERSION_SUFFIX&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;categories&amp;#34;&lt;/span>: [&lt;span style="color:#e6db74">&amp;#34;STANDARD&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;COMMENTS&amp;#34;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;testTimeout&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;2m&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;verbose&amp;#34;&lt;/span>: &lt;span style="color:#66d9ef">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="configuration-options">Configuration Options&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Option&lt;/th>
+ &lt;th>Type&lt;/th>
+ &lt;th>Default&lt;/th>
+ &lt;th>Description&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;code>preferredTools&lt;/code>&lt;/td>
+ &lt;td>string[]&lt;/td>
+ &lt;td>&lt;code>[&amp;quot;buf&amp;quot;, &amp;quot;protolint&amp;quot;, &amp;quot;protoc&amp;quot;]&lt;/code>&lt;/td>
+ &lt;td>Tools to try in order of preference&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>forceTool&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>Force a specific tool to be used&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>bufPath&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>Path to buf binary&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>protocPath&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>Path to protoc binary&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>protolintPath&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>Path to protolint binary&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>bufConfigPath&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>Path to buf.yaml configuration&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>bufWorkPath&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>Path to buf.work.yaml for workspaces&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>disabledChecks&lt;/code>&lt;/td>
+ &lt;td>string[]&lt;/td>
+ &lt;td>&lt;code>[]&lt;/code>&lt;/td>
+ &lt;td>buf lint checks to disable&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>categories&lt;/code>&lt;/td>
+ &lt;td>string[]&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>buf lint categories to check&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>protolintConfig&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>-&lt;/td>
+ &lt;td>Path to .protolint.yaml configuration&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>maxFileSize&lt;/code>&lt;/td>
+ &lt;td>number&lt;/td>
+ &lt;td>&lt;code>10485760&lt;/code>&lt;/td>
+ &lt;td>Maximum file size in bytes (10MB)&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>testTimeout&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>&lt;code>&amp;quot;2m&amp;quot;&lt;/code>&lt;/td>
+ &lt;td>Timeout for linting operations&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>verbose&lt;/code>&lt;/td>
+ &lt;td>boolean&lt;/td>
+ &lt;td>&lt;code>false&lt;/code>&lt;/td>
+ &lt;td>Enable verbose output&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="tool-specific-features">Tool-Specific Features&lt;/h2>
+&lt;h3 id="buf">buf&lt;/h3>
+&lt;p>buf is the recommended tool for protobuf linting. It provides:&lt;/p></description></item></channel></rss>
