@@ -158,11 +158,25 @@ func main() {
 			}
 		}
 
+		// Build arguments for show command
+		var showArgs []string
+
+		// Add config flag if it was provided
+		if *configFile != "" {
+			showArgs = append(showArgs, "--config", *configFile)
+		}
+		// Add debug flag if it was provided
+		if *debug {
+			showArgs = append(showArgs, "--debug")
+		}
+
 		// Handle backward compatibility for show-actions
-		showArgs := args[1:]
 		if args[0] == "show-actions" {
-			// Convert "show-actions <file>" to "show filter <file>"
-			showArgs = append([]string{"filter"}, args[1:]...)
+			// For show-actions, just pass the files directly
+			showArgs = append(showArgs, args[1:]...)
+		} else {
+			// Regular show command
+			showArgs = append(showArgs, args[1:]...)
 		}
 
 		cmd := exec.Command(subcommand, showArgs...) // #nosec G204 - subcommand is controlled
