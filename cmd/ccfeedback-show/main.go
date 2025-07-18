@@ -84,7 +84,7 @@ func main() {
 
 	// Process the file argument
 	filePath := flag.Args()[0]
-	if err := showFilter(filePath, ruleEngine, *debug); err != nil {
+	if err := showFilter(filePath, ruleEngine, configLoader, *configFile, *debug); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
@@ -123,8 +123,78 @@ func showConfig(appConfig *ccfeedback.AppConfig, debug bool) error {
 }
 */
 
+// ConfigPath represents a configuration file path with description
+type ConfigPath struct {
+	path string
+	desc string
+}
+
+// getConfigPaths returns the configuration paths that would be loaded
+func getConfigPaths(customConfigFile string, configLoader *ccfeedback.ConfigLoader) []ConfigPath {
+	var paths []ConfigPath
+
+	if customConfigFile != "" {
+		paths = append(paths, ConfigPath{customConfigFile, "custom config"})
+	} else if configLoader != nil {
+		homeDir, _ := os.UserHomeDir()
+		cwd, _ := os.Getwd()
+
+		// Only include paths that actually exist
+		potentialPaths := []ConfigPath{
+			{filepath.Join(homeDir, ".claude", "ccfeedback.json"), "global config"},
+			{filepath.Join(cwd, ".claude", "ccfeedback.json"), "project config"},
+			{filepath.Join(cwd, ".claude", "ccfeedback.local.json"), "local overrides"},
+		}
+
+		for _, cp := range potentialPaths {
+			if _, err := os.Stat(cp.path); err == nil {
+				paths = append(paths, cp)
+			}
+		}
+	}
+
+	return paths
+}
+
+// showConfigSources displays which configuration files were loaded
+func showConfigSources(customConfigFile string, configLoader *ccfeedback.ConfigLoader) {
+	fmt.Printf("=== Configuration Sources ===\n")
+
+	if customConfigFile != "" {
+		// Custom config file specified
+		fmt.Printf("Using custom config: %s\n", customConfigFile)
+		if _, err := os.Stat(customConfigFile); err == nil {
+			fmt.Printf("  ✓ File exists\n")
+		} else {
+			fmt.Printf("  ✗ File not found\n")
+		}
+	} else if configLoader != nil {
+		// Show standard config hierarchy
+		homeDir, _ := os.UserHomeDir()
+		cwd, _ := os.Getwd()
+
+		configPaths := []ConfigPath{
+			{filepath.Join(homeDir, ".claude", "ccfeedback.json"), "global config"},
+			{filepath.Join(cwd, ".claude", "ccfeedback.json"), "project config"},
+			{filepath.Join(cwd, ".claude", "ccfeedback.local.json"), "local overrides"},
+		}
+
+		fmt.Printf("Configuration files (in order of precedence):\n")
+		for _, cp := range configPaths {
+			if _, err := os.Stat(cp.path); err == nil {
+				fmt.Printf("  ✓ %s (%s)\n", cp.path, cp.desc)
+			} else {
+				fmt.Printf("  ✗ %s (%s) - not found\n", cp.path, cp.desc)
+			}
+		}
+		fmt.Printf("\nLater files override settings from earlier files.\n")
+	} else {
+		fmt.Printf("No configuration loaded.\n")
+	}
+}
+
 // showFilter shows which rules and linters apply to a specific file
-func showFilter(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, debug bool) error {
+func showFilter(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, configLoader *ccfeedback.ConfigLoader, customConfigFile string, debug bool) error {
 	// Check if file exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return fmt.Errorf("file does not exist: %s", filePath)
@@ -136,7 +206,10 @@ func showFilter(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, debug
 		return fmt.Errorf("failed to get absolute path: %w", err)
 	}
 
-	fmt.Printf("=== Configuration Analysis for: %s ===\n", absPath)
+	// Show configuration sources first
+	showConfigSources(customConfigFile, configLoader)
+
+	fmt.Printf("\n=== Configuration Analysis for: %s ===\n", absPath)
 
 	// Get the app config from the rule engine
 	appConfig := ruleEngine.GetAppConfig()
@@ -202,9 +275,15 @@ func showFilter(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, debug
 		}
 	}
 
-	// Show which rules would apply
+	// Show which rules would apply with config source info
 	fmt.Printf("\n--- Rule Hierarchy ---\n")
-	fmt.Printf("Rules are applied in order. Later rules override earlier ones.\n\n")
+	fmt.Printf("Rules are applied in order. Later rules override earlier ones.\n")
+
+	// Try to determine which config file rules come from based on their position
+	// This is a heuristic since we don't track sources during merge
+	configPaths := getConfigPaths(customConfigFile, configLoader)
+
+	fmt.Printf("\n")
 
 	matchedRules := false
 	for i, rule := range appConfig.Rules {
@@ -219,10 +298,18 @@ func showFilter(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, debug
 			matchedRules = true
 			fmt.Printf("%d. Pattern: %s", i+1, rule.Pattern)
 			if rule.Linter == "*" {
-				fmt.Printf(" (applies to ALL linters)\n")
+				fmt.Printf(" (applies to ALL linters)")
 			} else {
-				fmt.Printf(" (applies to %s linter)\n", rule.Linter)
+				fmt.Printf(" (applies to %s linter)", rule.Linter)
 			}
+
+			// Try to indicate which config file this likely came from
+			// This is a heuristic based on rule order
+			if len(configPaths) > 0 {
+				configIndex := min(i/max(1, len(appConfig.Rules)/len(configPaths)), len(configPaths)-1)
+				fmt.Printf(" [likely from: %s]", configPaths[configIndex].desc)
+			}
+			fmt.Printf("\n")
 
 			// Show what this rule would override
 			var overrideMap map[string]interface{}

@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": ["Read", "Write", "Execute"],
-    "deny": []
-  },
-  "customField": "myValue"
-}
