@@ -1,10 +1,10 @@
-package ccfeedback
+package gismo
 
 import (
 	"context"
 	"testing"
 
-	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/gismo/linters"
 )
 
 // MockLinter for testing

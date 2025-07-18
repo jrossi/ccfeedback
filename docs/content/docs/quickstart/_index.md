@@ -3,12 +3,12 @@ title: "Quick Start"
 linkTitle: "Quick Start"
 weight: 20
 description: >
-  Get started with CCFeedback in minutes
+  Get started with Gismo in minutes
 ---
 
 # Quick Start
 
-Get CCFeedback running in your environment quickly with these examples.
+Get Gismo running in your environment quickly with these examples.
 
 ## Prerequisites
 
@@ -17,41 +17,41 @@ Get CCFeedback running in your environment quickly with these examples.
 
 ## CLI Quick Start
 
-### 1. Install CCFeedback
+### 1. Install Gismo
 
 ```bash
 # Install with Homebrew (macOS/Linux)
-brew tap jrossi/ccfeedback https://github.com/jrossi/ccfeedback
-brew install jrossi/ccfeedback/ccfeedback
+brew tap jrossi/gismo https://github.com/jrossi/gismo
+brew install jrossi/gismo/gismo
 
 # Or download pre-built binary (Linux x86_64)
-curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Linux_x86_64.tar.gz | tar xz
-sudo mv ccfeedback /usr/local/bin/
+curl -L https://github.com/jrossi/gismo/releases/latest/download/gismo_Linux_x86_64.tar.gz | tar xz
+sudo mv gismo /usr/local/bin/
 
 # Or install with Go
-go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+go install github.com/jrossi/gismo/cmd/gismo@latest
 ```
 
 ### 2. Set Up Claude Code Integration
 
-Initialize ccfeedback as a Claude Code hook:
+Initialize gismo as a Claude Code hook:
 
 ```bash
-# Set up ccfeedback in Claude Code settings
-ccfeedback init
+# Set up gismo in Claude Code settings
+gismo init
 
 # Preview changes without applying
-ccfeedback init --dry-run
+gismo init --dry-run
 ```
 
-This will configure ccfeedback as a PostToolUse hook in your Claude Code settings.
+This will configure gismo as a PostToolUse hook in your Claude Code settings.
 
 ### 3. Basic Usage
 
 Process a Claude Code hook message:
 
 ```bash
-echo '{"hook_event_name": "PostToolUse", "tool_name": "Write", "tool_input": {"file_path": "test.go"}}' | ccfeedback
+echo '{"hook_event_name": "PostToolUse", "tool_name": "Write", "tool_input": {"file_path": "test.go"}}' | gismo
 ```
 
 ### 4. With Configuration
@@ -60,7 +60,7 @@ Create a basic configuration:
 
 ```bash
 mkdir -p .claude
-cat > .claude/ccfeedback.json << 'EOF'
+cat > .claude/gismo.json << 'EOF'
 {
   "linters": {
     "golang": {
@@ -85,7 +85,7 @@ EOF
 Run with configuration:
 
 ```bash
-ccfeedback --config .claude/ccfeedback.json
+gismo --config .claude/gismo.json
 ```
 
 ## Library Quick Start
@@ -94,7 +94,7 @@ ccfeedback --config .claude/ccfeedback.json
 
 ```bash
 go mod init your-project
-go get github.com/jrossi/ccfeedback
+go get github.com/jrossi/gismo
 ```
 
 ### 2. Basic Library Usage
@@ -107,12 +107,12 @@ import (
     "fmt"
     "log"
 
-    "github.com/jrossi/ccfeedback"
+    "github.com/jrossi/gismo"
 )
 
 func main() {
     // Create API with default configuration
-    api := ccfeedback.NewAPI()
+    api := gismo.NewAPI()
 
     // Process a hook message
     message := `{
@@ -139,18 +139,18 @@ import (
     "context"
     "log"
 
-    "github.com/jrossi/ccfeedback"
+    "github.com/jrossi/gismo"
 )
 
 func main() {
     // Load configuration from file
-    config, err := ccfeedback.LoadConfig(".claude/ccfeedback.json")
+    config, err := gismo.LoadConfig(".claude/gismo.json")
     if err != nil {
         log.Fatal(err)
     }
 
     // Create API with custom configuration
-    api := ccfeedback.NewAPIWithConfig(config)
+    api := gismo.NewAPIWithConfig(config)
 
     // Use the API
     result, err := api.ProcessHookMessage(context.Background(), `{
@@ -171,14 +171,14 @@ func main() {
 
 ### Code Quality Checks
 
-Use CCFeedback to validate code before commits:
+Use Gismo to validate code before commits:
 
 ```bash
 # Check Go files
-find . -name "*.go" -exec ccfeedback --file {} \;
+find . -name "*.go" -exec gismo --file {} \;
 
 # Check markdown documentation
-find docs -name "*.md" -exec ccfeedback --file {} \;
+find docs -name "*.md" -exec gismo --file {} \;
 ```
 
 ### CI/CD Integration
@@ -186,15 +186,15 @@ find docs -name "*.md" -exec ccfeedback --file {} \;
 Add to your GitHub Actions:
 
 ```yaml
-- name: Run CCFeedback
+- name: Run Gismo
   run: |
-    go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
-    ccfeedback --config .claude/ccfeedback.json
+    go install github.com/jrossi/gismo/cmd/gismo@latest
+    gismo --config .claude/gismo.json
 ```
 
 ### Claude Code Hooks
 
-After running `ccfeedback init`, your Claude Code settings will include:
+After running `gismo init`, your Claude Code settings will include:
 
 ```json
 {
@@ -205,7 +205,7 @@ After running `ccfeedback init`, your Claude Code settings will include:
         "hooks": [
           {
             "type": "command",
-            "command": "ccfeedback",
+            "command": "gismo",
             "timeout": 60000
           }
         ]

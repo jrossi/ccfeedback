@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jrossi/ccfeedback/linters"
-	"github.com/jrossi/ccfeedback/toolcache"
+	"github.com/jrossi/gismo/linters"
+	"github.com/jrossi/gismo/toolcache"
 )
 
 // JavaScriptLinter handles linting of JavaScript and TypeScript files

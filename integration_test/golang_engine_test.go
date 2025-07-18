@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jrossi/ccfeedback"
+	"github.com/jrossi/gismo"
 )
 
 func TestLintingRuleEngine_GolangIntegration(t *testing.T) {
-	engine := ccfeedback.NewLintingRuleEngine()
+	engine := gismo.NewLintingRuleEngine()
 
 	tests := []struct {
 		name           string
@@ -75,9 +75,9 @@ fmt.Println("Bad formatting")
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := &ccfeedback.PreToolUseMessage{
-				BaseHookMessage: ccfeedback.BaseHookMessage{
-					HookEventName: ccfeedback.PreToolUseEvent,
+			msg := &gismo.PreToolUseMessage{
+				BaseHookMessage: gismo.BaseHookMessage{
+					HookEventName: gismo.PreToolUseEvent,
 				},
 				ToolName: tt.toolName,
 				ToolInput: testConvertToRawMessage(map[string]interface{}{
@@ -106,7 +106,7 @@ fmt.Println("Bad formatting")
 }
 
 func TestLintingRuleEngine_GolangErrorHandling(t *testing.T) {
-	engine := ccfeedback.NewLintingRuleEngine()
+	engine := gismo.NewLintingRuleEngine()
 
 	tests := []struct {
 		name    string
@@ -147,9 +147,9 @@ func TestLintingRuleEngine_GolangErrorHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := &ccfeedback.PreToolUseMessage{
-				BaseHookMessage: ccfeedback.BaseHookMessage{
-					HookEventName: ccfeedback.PreToolUseEvent,
+			msg := &gismo.PreToolUseMessage{
+				BaseHookMessage: gismo.BaseHookMessage{
+					HookEventName: gismo.PreToolUseEvent,
 				},
 				ToolName:  "Write",
 				ToolInput: testConvertToRawMessage(tt.input),
@@ -174,7 +174,7 @@ func TestLintingRuleEngine_GolangErrorHandling(t *testing.T) {
 }
 
 func TestLintingRuleEngine_GolangOutputFormatting(t *testing.T) {
-	engine := ccfeedback.NewLintingRuleEngine()
+	engine := gismo.NewLintingRuleEngine()
 
 	badGolang := `package main
 
@@ -187,9 +187,9 @@ fmt.Println("More bad formatting")
 }
 }`
 
-	msg := &ccfeedback.PreToolUseMessage{
-		BaseHookMessage: ccfeedback.BaseHookMessage{
-			HookEventName: ccfeedback.PreToolUseEvent,
+	msg := &gismo.PreToolUseMessage{
+		BaseHookMessage: gismo.BaseHookMessage{
+			HookEventName: gismo.PreToolUseEvent,
 		},
 		ToolName: "Write",
 		ToolInput: testConvertToRawMessage(map[string]interface{}{
@@ -216,7 +216,7 @@ fmt.Println("More bad formatting")
 }
 
 func TestLintingRuleEngine_GolangSuccessCase(t *testing.T) {
-	engine := ccfeedback.NewLintingRuleEngine()
+	engine := gismo.NewLintingRuleEngine()
 
 	goodGolang := `package main
 
@@ -235,9 +235,9 @@ func GoodFunction(ctx context.Context, name string) error {
 	return nil
 }`
 
-	msg := &ccfeedback.PreToolUseMessage{
-		BaseHookMessage: ccfeedback.BaseHookMessage{
-			HookEventName: ccfeedback.PreToolUseEvent,
+	msg := &gismo.PreToolUseMessage{
+		BaseHookMessage: gismo.BaseHookMessage{
+			HookEventName: gismo.PreToolUseEvent,
 		},
 		ToolName: "Write",
 		ToolInput: testConvertToRawMessage(map[string]interface{}{
@@ -259,7 +259,7 @@ func GoodFunction(ctx context.Context, name string) error {
 }
 
 func TestLintingRuleEngine_GolangPerformance(t *testing.T) {
-	engine := ccfeedback.NewLintingRuleEngine()
+	engine := gismo.NewLintingRuleEngine()
 
 	// Create large Go content
 	largeContent := "package main\n\nimport \"fmt\"\n\n"
@@ -267,9 +267,9 @@ func TestLintingRuleEngine_GolangPerformance(t *testing.T) {
 		largeContent += fmt.Sprintf("func Function%d() {\n\tfmt.Println(\"Function %d\")\n}\n\n", i, i)
 	}
 
-	msg := &ccfeedback.PreToolUseMessage{
-		BaseHookMessage: ccfeedback.BaseHookMessage{
-			HookEventName: ccfeedback.PreToolUseEvent,
+	msg := &gismo.PreToolUseMessage{
+		BaseHookMessage: gismo.BaseHookMessage{
+			HookEventName: gismo.PreToolUseEvent,
 		},
 		ToolName: "Write",
 		ToolInput: testConvertToRawMessage(map[string]interface{}{
@@ -293,7 +293,7 @@ func TestLintingRuleEngine_GolangPerformance(t *testing.T) {
 }
 
 func TestLintingRuleEngine_GolangConcurrency(t *testing.T) {
-	engine := ccfeedback.NewLintingRuleEngine()
+	engine := gismo.NewLintingRuleEngine()
 
 	content := `package main
 
@@ -309,9 +309,9 @@ func main() {
 
 	for i := 0; i < numRequests; i++ {
 		go func(id int) {
-			msg := &ccfeedback.PreToolUseMessage{
-				BaseHookMessage: ccfeedback.BaseHookMessage{
-					HookEventName: ccfeedback.PreToolUseEvent,
+			msg := &gismo.PreToolUseMessage{
+				BaseHookMessage: gismo.BaseHookMessage{
+					HookEventName: gismo.PreToolUseEvent,
 				},
 				ToolName: "Write",
 				ToolInput: testConvertToRawMessage(map[string]interface{}{
@@ -335,7 +335,7 @@ func main() {
 }
 
 func TestLintingRuleEngine_GolangWithMarkdown(t *testing.T) {
-	engine := ccfeedback.NewLintingRuleEngine()
+	engine := gismo.NewLintingRuleEngine()
 
 	tests := []struct {
 		name     string
@@ -376,9 +376,9 @@ func TestLintingRuleEngine_GolangWithMarkdown(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := &ccfeedback.PreToolUseMessage{
-				BaseHookMessage: ccfeedback.BaseHookMessage{
-					HookEventName: ccfeedback.PreToolUseEvent,
+			msg := &gismo.PreToolUseMessage{
+				BaseHookMessage: gismo.BaseHookMessage{
+					HookEventName: gismo.PreToolUseEvent,
 				},
 				ToolName: "Write",
 				ToolInput: testConvertToRawMessage(map[string]interface{}{

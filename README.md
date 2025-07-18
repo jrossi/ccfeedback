@@ -1,4 +1,4 @@
-# CCFeedback - Claude Code Hooks Library
+# Gismo - Claude Code Hooks Library
 
 A high-performance Go library and CLI tool for handling Claude Code hooks with built-in linting capabilities.
 Features automatic Go file formatting validation and test running. Built with
@@ -24,43 +24,43 @@ Features automatic Go file formatting validation and test running. Built with
 ### Install with Homebrew (macOS/Linux)
 
 ```bash
-brew tap jrossi/ccfeedback https://github.com/jrossi/ccfeedback
-brew install jrossi/ccfeedback/ccfeedback
+brew tap jrossi/gismo https://github.com/jrossi/gismo
+brew install jrossi/gismo/gismo
 ```
 
 ### Download Pre-built Binary
 
-Download the latest release for your platform from the [releases page](https://github.com/jrossi/ccfeedback/releases).
+Download the latest release for your platform from the [releases page](https://github.com/jrossi/gismo/releases).
 
 ```bash
 # Linux x86_64
-curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Linux_x86_64.tar.gz | tar xz
+curl -L https://github.com/jrossi/gismo/releases/latest/download/gismo_Linux_x86_64.tar.gz | tar xz
 
 # macOS x86_64
-curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Darwin_x86_64.tar.gz | tar xz
+curl -L https://github.com/jrossi/gismo/releases/latest/download/gismo_Darwin_x86_64.tar.gz | tar xz
 
 # macOS arm64 (M1/M2)
-curl -L https://github.com/jrossi/ccfeedback/releases/latest/download/ccfeedback_Darwin_arm64.tar.gz | tar xz
+curl -L https://github.com/jrossi/gismo/releases/latest/download/gismo_Darwin_arm64.tar.gz | tar xz
 
 # Windows x86_64
-# Download ccfeedback_Windows_x86_64.zip from releases page
+# Download gismo_Windows_x86_64.zip from releases page
 ```
 
 ### Install with Go
 
 ```bash
 # Install the CLI tool
-go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+go install github.com/jrossi/gismo/cmd/gismo@latest
 
 # Use as a library
-go get github.com/jrossi/ccfeedback
+go get github.com/jrossi/gismo
 ```
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/jrossi/ccfeedback.git
-cd ccfeedback
+git clone https://github.com/jrossi/gismo.git
+cd gismo
 make install
 ```
 
@@ -73,15 +73,15 @@ package main
 
 import (
     "context"
-    "github.com/jrossi/ccfeedback"
+    "github.com/jrossi/gismo"
 )
 
 func main() {
     // Create API with default rule engine
-    api := ccfeedback.New()
+    api := gismo.New()
 
     // Or with a custom rule engine
-    api := ccfeedback.NewWithRuleEngine(myRuleEngine)
+    api := gismo.NewWithRuleEngine(myRuleEngine)
 
     // Process stdin (for use as a hook)
     ctx := context.Background()
@@ -96,16 +96,16 @@ func main() {
 ```go
 type MyRuleEngine struct{}
 
-func (e *MyRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *ccfeedback.PreToolUseMessage) (
-    *ccfeedback.HookResponse, error) {
+func (e *MyRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *gismo.PreToolUseMessage) (
+    *gismo.HookResponse, error) {
     // Block dangerous tools
     if msg.ToolName == "Bash" {
-        return &ccfeedback.HookResponse{
+        return &gismo.HookResponse{
             Decision: "block",
             Reason:   "Bash commands are not allowed",
         }, nil
     }
-    return &ccfeedback.HookResponse{Decision: "approve"}, nil
+    return &gismo.HookResponse{Decision: "approve"}, nil
 }
 
 // Implement other methods...
@@ -115,24 +115,24 @@ func (e *MyRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *ccfeedback.P
 
 ```go
 // Combine multiple rule engines
-composite := ccfeedback.NewCompositeRuleEngine(
+composite := gismo.NewCompositeRuleEngine(
     securityEngine,
     loggingEngine,
     customEngine,
 )
 
-api := ccfeedback.NewWithRuleEngine(composite)
+api := gismo.NewWithRuleEngine(composite)
 ```
 
 ### Builder Pattern
 
 ```go
-api := ccfeedback.NewBuilder().
+api := gismo.NewBuilder().
     WithTimeout(30 * time.Second).
     WithRuleEngine(myEngine).
-    RegisterHook(ccfeedback.HookConfig{
+    RegisterHook(gismo.HookConfig{
         Name:        "security-check",
-        EventType:   ccfeedback.PreToolUseEvent,
+        EventType:   gismo.PreToolUseEvent,
         ToolPattern: "Write|Edit",
         Priority:    1,
         Timeout:     30 * time.Second,
@@ -150,78 +150,78 @@ Reads hook messages from stdin and writes responses to stdout:
 
 ```bash
 # Basic usage
-echo '{"session_id":"123","hook_event_name":"PreToolUse",...}' | ccfeedback
+echo '{"session_id":"123","hook_event_name":"PreToolUse",...}' | gismo
 
 # With custom timeout
-ccfeedback -timeout 30s
+gismo -timeout 30s
 
 # Debug mode
-ccfeedback -debug
+gismo -debug
 
 # With custom configuration
-ccfeedback -config my-config.json
+gismo -config my-config.json
 ```
 
 #### Init Command
 
-Set up ccfeedback in Claude Code settings:
+Set up gismo in Claude Code settings:
 
 ```bash
-# Initialize ccfeedback hooks in Claude Code settings
-ccfeedback init
+# Initialize gismo hooks in Claude Code settings
+gismo init
 
 # Only update global settings (~/.claude/settings.json)
-ccfeedback init --global
+gismo init --global
 
 # Only update project settings (.claude/settings.json)
-ccfeedback init --project
+gismo init --project
 
 # Preview changes without applying them
-ccfeedback init --dry-run
+gismo init --dry-run
 
 # Apply changes without confirmation prompt
-ccfeedback init --force
+gismo init --force
 
 # Configure for specific tools only (e.g., Write, Edit, Bash)
-ccfeedback init --matcher "Write"
-ccfeedback init --matcher "Bash"
+gismo init --matcher "Write"
+gismo init --matcher "Bash"
 
 # Empty matcher (default) matches all tools
-ccfeedback init --matcher ""
+gismo init --matcher ""
 ```
 
 The init command:
-- Adds ccfeedback as a PostToolUse hook in Claude Code settings
+- Adds gismo as a PostToolUse hook in Claude Code settings
 - Shows proposed changes in diff format before applying
 - Creates timestamped backups of existing settings
 - Preserves all existing configuration and custom fields
-- Detects when ccfeedback is already configured
+- Detects when gismo is already configured
 
 #### Show Command
 
-The show command provides comprehensive visibility into ccfeedback's configuration and behavior:
+The show command provides comprehensive visibility into gismo's configuration and behavior:
 
 ```bash
 # Show current configuration
-ccfeedback show config
+gismo show config
 
 # Show which rules and linters apply to a specific file
-ccfeedback show filter internal/api.go
+gismo show filter internal/api.go
 
 # Show setup status and configuration paths
-ccfeedback show setup
+gismo show setup
 
 # Show available linters and their status
-ccfeedback show linters
+gismo show linters
 
 # With custom configuration file
-ccfeedback show --config team-config.json filter pkg/public/api.go
+gismo show --config team-config.json filter pkg/public/api.go
 
 # Debug mode for more detailed output
-ccfeedback show --debug setup
+gismo show --debug setup
 
 # Backward compatibility: show-actions still works
-ccfeedback show-actions internal/api.go  # Same as: ccfeedback show filter internal/api.go
+gismo show-actions internal/api.go  # Same as: gismo show filter internal/api.go
 ```
 
 **Show Subcommands:**
@@ -236,7 +236,7 @@ ccfeedback show-actions internal/api.go  # Same as: ccfeedback show filter inter
   - Shows rule hierarchy with pattern matching
   - Displays final merged configuration after all overrides
 
-- **`show setup`**: Checks ccfeedback setup status
+- **`show setup`**: Checks gismo setup status
   - Binary availability in PATH
   - Configuration file locations and status
   - Claude integration status (hooks configured)
@@ -250,7 +250,7 @@ ccfeedback show-actions internal/api.go  # Same as: ccfeedback show filter inter
 
 ### Go Linting Integration
 
-CCFeedback provides comprehensive Go file linting with enhanced golangci-lint integration:
+Gismo provides comprehensive Go file linting with enhanced golangci-lint integration:
 
 **Enhanced Linting with golangci-lint:**
 - Automatically detects and uses golangci-lint for comprehensive analysis
@@ -285,7 +285,7 @@ CCFeedback provides comprehensive Go file linting with enhanced golangci-lint in
 {
   "PreToolUse": [
     {
-      "command": "/path/to/ccfeedback",
+      "command": "/path/to/gismo",
       "tool_patterns": ["Write", "Edit", "MultiEdit"]
     }
   ]
@@ -367,7 +367,7 @@ Hook responses can use either exit codes or JSON:
 ## Examples
 
 Working examples are included in the usage section above. For production use, ensure your hooks.json
-configuration points to the installed ccfeedback binary location.
+configuration points to the installed gismo binary location.
 
 ## Contributing
 

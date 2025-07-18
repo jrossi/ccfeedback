@@ -8,7 +8,7 @@ description: >
 
 # Go Linting
 
-CCFeedback provides comprehensive Go linting through golangci-lint integration with intelligent fallback
+Gismo provides comprehensive Go linting through golangci-lint integration with intelligent fallback
 capabilities.
 
 ## Features
@@ -149,7 +149,7 @@ Enhanced mode runs full analysis with all configured checks.
 
 ## Module Detection
 
-CCFeedback automatically detects Go modules and adjusts behavior:
+Gismo automatically detects Go modules and adjusts behavior:
 
 1. **Module Root Detection**: Finds `go.mod` files to determine module boundaries
 2. **Test Execution**: Runs tests from the module root directory
@@ -168,7 +168,7 @@ CCFeedback automatically detects Go modules and adjusts behavior:
 changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$')
 if [ -n "$changed_files" ]; then
     for file in $changed_files; do
-        ccfeedback --file "$file"
+        gismo --file "$file"
     done
 fi
 ```
@@ -179,7 +179,7 @@ fi
 .PHONY: lint lint-fix test-go
 
 lint:
-	ccfeedback --config .claude/ccfeedback.json
+	gismo --config .claude/gismo.json
 
 lint-fix:
 	golangci-lint run --fix ./...
@@ -210,11 +210,11 @@ jobs:
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
         sh -s -- -b $(go env GOPATH)/bin v1.55.0
 
-    - name: Install ccfeedback
-      run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+    - name: Install gismo
+      run: go install github.com/jrossi/gismo/cmd/gismo@latest
 
     - name: Lint code
-      run: ccfeedback --config .claude/ccfeedback.json
+      run: gismo --config .claude/gismo.json
 ```
 
 ## Troubleshooting
@@ -223,7 +223,7 @@ jobs:
 
 #### golangci-lint Not Found
 
-If golangci-lint is not installed, CCFeedback falls back to basic Go tools:
+If golangci-lint is not installed, Gismo falls back to basic Go tools:
 
 ```bash
 # Install golangci-lint
@@ -258,7 +258,7 @@ go mod tidy
 Enable verbose output for troubleshooting:
 
 ```bash
-ccfeedback --config .claude/ccfeedback.json --verbose
+gismo --config .claude/gismo.json --verbose
 ```
 
 ## Best Practices

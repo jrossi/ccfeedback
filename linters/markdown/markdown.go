@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/gismo/linters"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"

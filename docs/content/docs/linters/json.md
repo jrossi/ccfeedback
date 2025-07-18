@@ -8,7 +8,7 @@ description: >
 
 # JSON Validation
 
-CCFeedback provides comprehensive JSON validation using high-performance go-json parsing with optional
+Gismo provides comprehensive JSON validation using high-performance go-json parsing with optional
 JSON schema validation for structured data validation.
 
 ## Features
@@ -274,7 +274,7 @@ JSON schema validation for structured data validation.
 changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.json$\|\.jsonl$')
 if [ -n "$changed_files" ]; then
     for file in $changed_files; do
-        ccfeedback --file "$file"
+        gismo --file "$file"
     done
 fi
 ```
@@ -285,10 +285,10 @@ fi
 .PHONY: validate-json lint-config
 
 validate-json:
-	ccfeedback --config .claude/ccfeedback.json --filter="*.json"
+	gismo --config .claude/gismo.json --filter="*.json"
 
 lint-config:
-	find config -name "*.json" -exec ccfeedback --file {} \;
+	find config -name "*.json" -exec gismo --file {} \;
 
 validate-schemas:
 	find schemas -name "*.json" -exec jsonschema --check {} \;
@@ -308,11 +308,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install ccfeedback
-      run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+    - name: Install gismo
+      run: go install github.com/jrossi/gismo/cmd/gismo@latest
 
     - name: Validate JSON files
-      run: ccfeedback --config .claude/ccfeedback.json
+      run: gismo --config .claude/gismo.json
 
     - name: Validate schemas
       run: |
@@ -357,7 +357,7 @@ jobs:
 
 ### Error Messages
 
-CCFeedback provides detailed error messages:
+Gismo provides detailed error messages:
 
 ```
 JSON validation failed at line 15, column 8:
@@ -409,7 +409,7 @@ Limit file size or disable schema validation:
 Enable verbose validation output:
 
 ```bash
-ccfeedback --config .claude/ccfeedback.json --verbose
+gismo --config .claude/gismo.json --verbose
 ```
 
 ## Best Practices

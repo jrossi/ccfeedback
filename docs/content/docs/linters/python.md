@@ -8,7 +8,7 @@ description: >
 
 # Python Linting
 
-CCFeedback provides modern Python linting through UV/UVX toolchain integration with ruff for fast,
+Gismo provides modern Python linting through UV/UVX toolchain integration with ruff for fast,
 comprehensive code analysis.
 
 ## Features
@@ -117,7 +117,7 @@ comprehensive code analysis.
 
 ### UV/UVX Setup
 
-CCFeedback automatically detects and uses UV/UVX when available:
+Gismo automatically detects and uses UV/UVX when available:
 
 ```bash
 # Install UV
@@ -159,7 +159,7 @@ force-single-line = true
 changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$')
 if [ -n "$changed_files" ]; then
     for file in $changed_files; do
-        ccfeedback --file "$file"
+        gismo --file "$file"
     done
 fi
 ```
@@ -170,7 +170,7 @@ fi
 .PHONY: lint-python format-python test-python
 
 lint-python:
-	ccfeedback --config .claude/ccfeedback.json --filter="*.py"
+	gismo --config .claude/gismo.json --filter="*.py"
 
 format-python:
 	uv run ruff format .
@@ -195,11 +195,11 @@ jobs:
     - name: Install UV
       run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    - name: Install ccfeedback
-      run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+    - name: Install gismo
+      run: go install github.com/jrossi/gismo/cmd/gismo@latest
 
     - name: Lint Python code
-      run: ccfeedback --config .claude/ccfeedback.json
+      run: gismo --config .claude/gismo.json
 ```
 
 ## Common Rule Configurations
@@ -299,7 +299,7 @@ uv run ruff check --show-settings
 Enable verbose output:
 
 ```bash
-ccfeedback --config .claude/ccfeedback.json --verbose
+gismo --config .claude/gismo.json --verbose
 ```
 
 ## Best Practices

@@ -1,4 +1,4 @@
-package ccfeedback
+package gismo
 
 import (
 	"fmt"
@@ -38,9 +38,9 @@ func (cl *ConfigLoader) LoadConfig() (*AppConfig, error) {
 
 	// Configuration files in order of precedence (lowest to highest)
 	configPaths := []string{
-		filepath.Join(cl.homeDir, ".claude", "ccfeedback.json"),          // user global
-		filepath.Join(cl.projectDir, ".claude", "ccfeedback.json"),       // project-specific
-		filepath.Join(cl.projectDir, ".claude", "ccfeedback.local.json"), // local overrides
+		filepath.Join(cl.homeDir, ".claude", "gismo.json"),          // user global
+		filepath.Join(cl.projectDir, ".claude", "gismo.json"),       // project-specific
+		filepath.Join(cl.projectDir, ".claude", "gismo.local.json"), // local overrides
 	}
 
 	for _, path := range configPaths {
@@ -117,9 +117,9 @@ func (cl *ConfigLoader) FindProjectRoot() (string, error) {
 // GetConfigPaths returns the paths where config files will be searched
 func (cl *ConfigLoader) GetConfigPaths() []string {
 	return []string{
-		filepath.Join(cl.homeDir, ".claude", "ccfeedback.json"),
-		filepath.Join(cl.projectDir, ".claude", "ccfeedback.json"),
-		filepath.Join(cl.projectDir, ".claude", "ccfeedback.local.json"),
+		filepath.Join(cl.homeDir, ".claude", "gismo.json"),
+		filepath.Join(cl.projectDir, ".claude", "gismo.json"),
+		filepath.Join(cl.projectDir, ".claude", "gismo.local.json"),
 	}
 }
 

@@ -17,7 +17,7 @@ import (
 	"time"
 
 	json "github.com/goccy/go-json"
-	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/gismo/linters"
 )
 
 // GoLinter handles Go file linting, formatting, and test running with golangci-lint integration

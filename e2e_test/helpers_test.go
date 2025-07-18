@@ -8,20 +8,20 @@ import (
 	"testing"
 )
 
-// buildTestBinary builds the ccfeedback binary for testing
+// buildTestBinary builds the gismo binary for testing
 func buildTestBinary(t *testing.T) string {
 	t.Helper()
 
 	// Create temporary binary
-	tmpDir, err := os.MkdirTemp("", "ccfeedback_test_")
+	tmpDir, err := os.MkdirTemp("", "gismo_test_")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
-	binPath := filepath.Join(tmpDir, "ccfeedback_test")
+	binPath := filepath.Join(tmpDir, "gismo_test")
 
 	// Build the binary
-	cmd := exec.Command("go", "build", "-o", binPath, "./cmd/ccfeedback")
+	cmd := exec.Command("go", "build", "-o", binPath, "./cmd/gismo")
 	cmd.Dir = ".." // Go up one directory since we're in e2e_test
 
 	var stderr bytes.Buffer

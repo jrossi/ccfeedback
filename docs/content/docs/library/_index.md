@@ -8,13 +8,13 @@ description: >
 
 # Library API
 
-CCFeedback provides a comprehensive Go library for integrating hook processing and linting capabilities
+Gismo provides a comprehensive Go library for integrating hook processing and linting capabilities
 into your applications.
 
 ## Installation
 
 ```bash
-go get github.com/jrossi/ccfeedback
+go get github.com/jrossi/gismo
 ```
 
 ## Quick Start
@@ -29,12 +29,12 @@ import (
     "fmt"
     "log"
 
-    "github.com/jrossi/ccfeedback"
+    "github.com/jrossi/gismo"
 )
 
 func main() {
     // Create API with default configuration
-    api := ccfeedback.NewAPI()
+    api := gismo.NewAPI()
 
     // Process a hook message
     message := `{
@@ -61,18 +61,18 @@ import (
     "context"
     "log"
 
-    "github.com/jrossi/ccfeedback"
+    "github.com/jrossi/gismo"
 )
 
 func main() {
     // Load configuration from file
-    config, err := ccfeedback.LoadConfig(".claude/ccfeedback.json")
+    config, err := gismo.LoadConfig(".claude/gismo.json")
     if err != nil {
         log.Fatal(err)
     }
 
     // Create API with custom configuration
-    api := ccfeedback.NewAPIWithConfig(config)
+    api := gismo.NewAPIWithConfig(config)
 
     // Process hook message
     result, err := api.ProcessHookMessage(context.Background(), `{
@@ -95,11 +95,11 @@ func main() {
 
 ```go
 // Create with default configuration
-api := ccfeedback.NewAPI()
+api := gismo.NewAPI()
 
 // Create with custom configuration
-config := &ccfeedback.Config{
-    Linters: map[string]ccfeedback.LinterConfig{
+config := &gismo.Config{
+    Linters: map[string]gismo.LinterConfig{
         "golang": {
             Enabled: true,
             Config: map[string]interface{}{
@@ -108,11 +108,11 @@ config := &ccfeedback.Config{
         },
     },
 }
-api := ccfeedback.NewAPIWithConfig(config)
+api := gismo.NewAPIWithConfig(config)
 
 // Create with custom rule engine
 engine := &MyCustomEngine{}
-api := ccfeedback.NewAPIWithEngine(engine)
+api := gismo.NewAPIWithEngine(engine)
 ```
 
 ### Hook Processing
@@ -122,7 +122,7 @@ api := ccfeedback.NewAPIWithEngine(engine)
 result, err := api.ProcessHookMessage(ctx, messageJSON)
 
 // Process hook message from struct
-msg := &ccfeedback.HookMessage{
+msg := &gismo.HookMessage{
     Type: "PreToolUse",
     Tool: "bash",
     Command: "go test",
@@ -139,16 +139,16 @@ result, err := api.ProcessFile(ctx, "src/main.go")
 
 ```go
 // Load from file
-config, err := ccfeedback.LoadConfig("config.json")
+config, err := gismo.LoadConfig("config.json")
 
 // Load with search paths
-config, err := ccfeedback.LoadConfigWithPaths([]string{
-    ".claude/ccfeedback.json",
-    "~/.claude/ccfeedback.json",
+config, err := gismo.LoadConfigWithPaths([]string{
+    ".claude/gismo.json",
+    "~/.claude/gismo.json",
 })
 
 // Default configuration
-config := ccfeedback.DefaultConfig()
+config := gismo.DefaultConfig()
 ```
 
 ### Configuration Structure
@@ -179,26 +179,26 @@ type Rule struct {
 
 ```go
 // Golang linting engine
-engine := &ccfeedback.GolangEngine{
-    Config: ccfeedback.GolangConfig{
+engine := &gismo.GolangEngine{
+    Config: gismo.GolangConfig{
         FastMode: true,
         TestTimeout: "5m",
     },
 }
 
 // Markdown linting engine
-engine := &ccfeedback.MarkdownEngine{
-    Config: ccfeedback.MarkdownConfig{
+engine := &gismo.MarkdownEngine{
+    Config: gismo.MarkdownConfig{
         MaxLineLength: 120,
         RequireFrontmatter: false,
     },
 }
 
 // Composite engine (multiple engines)
-composite := ccfeedback.NewCompositeRuleEngine(
-    &ccfeedback.GolangEngine{},
-    &ccfeedback.MarkdownEngine{},
-    &ccfeedback.JSONEngine{},
+composite := gismo.NewCompositeRuleEngine(
+    &gismo.GolangEngine{},
+    &gismo.MarkdownEngine{},
+    &gismo.JSONEngine{},
 )
 ```
 
@@ -209,21 +209,21 @@ type MyRuleEngine struct {
     config MyConfig
 }
 
-func (e *MyRuleEngine) ShouldProcess(ctx context.Context, msg *ccfeedback.HookMessage) (bool, error) {
+func (e *MyRuleEngine) ShouldProcess(ctx context.Context, msg *gismo.HookMessage) (bool, error) {
     // Determine if this engine should process the message
     return msg.Tool == "myTool", nil
 }
 
-func (e *MyRuleEngine) ProcessMessage(ctx context.Context, msg *ccfeedback.HookMessage) (*ccfeedback.Result, error) {
+func (e *MyRuleEngine) ProcessMessage(ctx context.Context, msg *gismo.HookMessage) (*gismo.Result, error) {
     // Custom processing logic
-    return &ccfeedback.Result{
+    return &gismo.Result{
         Success: true,
         Message: "Custom processing completed",
     }, nil
 }
 
 // Use custom engine
-api := ccfeedback.NewAPIWithEngine(&MyRuleEngine{})
+api := gismo.NewAPIWithEngine(&MyRuleEngine{})
 ```
 
 ## Message Types
@@ -281,14 +281,14 @@ type Issue struct {
 
 ```go
 // Configure parallel execution
-config := &ccfeedback.Config{
-    Parallel: ccfeedback.ParallelConfig{
+config := &gismo.Config{
+    Parallel: gismo.ParallelConfig{
         MaxWorkers: 8,
         DisableParallel: false,
     },
 }
 
-api := ccfeedback.NewAPIWithConfig(config)
+api := gismo.NewAPIWithConfig(config)
 ```
 
 ### Context and Cancellation
@@ -316,11 +316,11 @@ result, err := api.ProcessHookMessage(ctx, message)
 result, err := api.ProcessHookMessage(ctx, message)
 if err != nil {
     switch {
-    case errors.Is(err, ccfeedback.ErrConfigNotFound):
+    case errors.Is(err, gismo.ErrConfigNotFound):
         log.Println("Configuration file not found")
-    case errors.Is(err, ccfeedback.ErrInvalidMessage):
+    case errors.Is(err, gismo.ErrInvalidMessage):
         log.Println("Invalid hook message format")
-    case errors.Is(err, ccfeedback.ErrTimeout):
+    case errors.Is(err, gismo.ErrTimeout):
         log.Println("Processing timed out")
     default:
         log.Printf("Unexpected error: %v", err)
@@ -342,8 +342,8 @@ if !result.Success {
 
 ```go
 // For large files, consider streaming
-config := &ccfeedback.Config{
-    Linters: map[string]ccfeedback.LinterConfig{
+config := &gismo.Config{
+    Linters: map[string]gismo.LinterConfig{
         "json": {
             Config: map[string]interface{}{
                 "streamingMode": true,
@@ -358,7 +358,7 @@ config := &ccfeedback.Config{
 
 ```go
 // Enable rule engine caching
-api := ccfeedback.NewAPI()
+api := gismo.NewAPI()
 api.EnableCaching(true)
 
 // Custom cache implementation
@@ -378,14 +378,14 @@ import (
     "net/http"
     "log"
 
-    "github.com/jrossi/ccfeedback"
+    "github.com/jrossi/gismo"
 )
 
 func main() {
-    api := ccfeedback.NewAPI()
+    api := gismo.NewAPI()
 
     http.HandleFunc("/hook", func(w http.ResponseWriter, r *http.Request) {
-        var msg ccfeedback.HookMessage
+        var msg gismo.HookMessage
         if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
             http.Error(w, err.Error(), http.StatusBadRequest)
             return
@@ -418,7 +418,7 @@ import (
     "fmt"
     "os"
 
-    "github.com/jrossi/ccfeedback"
+    "github.com/jrossi/gismo"
 )
 
 func main() {
@@ -428,7 +428,7 @@ func main() {
     )
     flag.Parse()
 
-    var api *ccfeedback.API
+    var api *gismo.API
     if *configFile != "" {
         config, err := ccfeedback.LoadConfig(*configFile)
         if err != nil {
@@ -440,14 +440,14 @@ func main() {
         api = ccfeedback.NewAPI()
     }
 
-    var result *ccfeedback.Result
+    var result *gismo.Result
     var err error
 
     if *file != "" {
         result, err = api.ProcessFile(context.Background(), *file)
     } else {
         // Read from stdin
-        var msg ccfeedback.HookMessage
+        var msg gismo.HookMessage
         if err := json.NewDecoder(os.Stdin).Decode(&msg); err != nil {
             fmt.Fprintf(os.Stderr, "Error reading message: %v\n", err)
             os.Exit(1)
@@ -477,13 +477,13 @@ import (
     "context"
     "testing"
 
-    "github.com/jrossi/ccfeedback"
+    "github.com/jrossi/gismo"
 )
 
 func TestAPIProcessing(t *testing.T) {
-    api := ccfeedback.NewAPI()
+    api := gismo.NewAPI()
 
-    msg := &ccfeedback.HookMessage{
+    msg := &gismo.HookMessage{
         Type: "PreToolUse",
         Tool: "bash",
         Command: "echo test",
@@ -504,8 +504,8 @@ func TestAPIProcessing(t *testing.T) {
 
 ```go
 func BenchmarkAPIProcessing(b *testing.B) {
-    api := ccfeedback.NewAPI()
-    msg := &ccfeedback.HookMessage{
+    api := gismo.NewAPI()
+    msg := &gismo.HookMessage{
         Type: "PreToolUse",
         Tool: "bash",
         Command: "echo test",

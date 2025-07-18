@@ -1,4 +1,4 @@
-package ccfeedback
+package gismo
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// AppConfig represents the complete configuration for ccfeedback
+// AppConfig represents the complete configuration for gismo
 type AppConfig struct {
 	// Global settings
 	Parallel *ParallelConfig `json:"parallel,omitempty"`

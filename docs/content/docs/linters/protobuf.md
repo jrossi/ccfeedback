@@ -8,7 +8,7 @@ description: >
 
 # Protocol Buffer Linting
 
-CCFeedback provides comprehensive Protocol Buffer linting support using industry-standard tools:
+Gismo provides comprehensive Protocol Buffer linting support using industry-standard tools:
 `buf` for modern linting, `protolint` as an alternative, and `protoc` for basic syntax validation.
 
 ## Prerequisites
@@ -200,10 +200,10 @@ directories:
 - name: Setup buf
   uses: bufbuild/buf-setup-action@v1
 
-- name: Run CCFeedback
+- name: Run Gismo
   run: |
-    go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
-    ccfeedback --config .claude/ccfeedback.json
+    go install github.com/jrossi/gismo/cmd/gismo@latest
+    gismo --config .claude/gismo.json
 ```
 
 ### GitLab CI
@@ -214,9 +214,9 @@ lint:
   before_script:
     - curl -sSL https://github.com/bufbuild/buf/releases/download/v1.28.1/buf-Linux-x86_64 -o /usr/local/bin/buf
     - chmod +x /usr/local/bin/buf
-    - go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+    - go install github.com/jrossi/gismo/cmd/gismo@latest
   script:
-    - ccfeedback --config .claude/ccfeedback.json
+    - gismo --config .claude/gismo.json
 ```
 
 ## Performance Characteristics
@@ -232,7 +232,7 @@ lint:
 
 ```text
 > Write operation feedback:
-- [ccfeedback:api/v1/service.proto]: api/v1/service.proto:4:1: Package name "example" should be
+- [gismo:api/v1/service.proto]: api/v1/service.proto:4:1: Package name "example" should be
   suffixed with a correctly formed version, such as "example.v1". (PACKAGE_VERSION_SUFFIX)
   api/v1/service.proto:8:3: Field name "ID" should be lower_snake_case, such as "id". (FIELD_LOWER_SNAKE_CASE)
   api/v1/service.proto:12:1: Service name "ExampleAPI" should be suffixed with "Service". (SERVICE_SUFFIX)
@@ -254,7 +254,7 @@ lint:
 
 ### Automatic Tool Selection
 
-CCFeedback automatically selects the best available tool:
+Gismo automatically selects the best available tool:
 
 ```json
 {

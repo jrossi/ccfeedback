@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/gismo/linters"
 )
 
 func TestPythonLinter_BatchExecution(t *testing.T) {

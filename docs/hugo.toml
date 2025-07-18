@@ -1,10 +1,10 @@
-baseURL = 'http://jeremyrossi.com/ccfeedback/'
+baseURL = 'http://gismo.run/'
 languageCode = 'en-us'
-title = 'CCFeedback Documentation'
+title = 'Gismo Documentation'
 theme = 'docsy'
 
 [params]
-github_repo = 'https://github.com/jrossi/ccfeedback'
+github_repo = 'https://github.com/jrossi/gismo'
 github_branch = 'main'
 
 [markup]
@@ -27,5 +27,5 @@ github_branch = 'main'
     weight = 30
   [[menu.main]]
     name = "GitHub"
-    url = "https://github.com/jrossi/ccfeedback"
+    url = "https://github.com/jrossi/gismo"
     weight = 50

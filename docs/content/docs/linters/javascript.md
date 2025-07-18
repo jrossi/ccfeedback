@@ -8,7 +8,7 @@ description: >
 
 # JavaScript Linting
 
-CCFeedback provides JavaScript and TypeScript linting through ESLint integration with support for modern
+Gismo provides JavaScript and TypeScript linting through ESLint integration with support for modern
 JavaScript features and TypeScript syntax.
 
 ## Features
@@ -217,7 +217,7 @@ JavaScript features and TypeScript syntax.
 ```json
 {
   "scripts": {
-    "lint": "ccfeedback --config .claude/ccfeedback.json",
+    "lint": "gismo --config .claude/gismo.json",
     "lint:js": "eslint src/**/*.{js,jsx,ts,tsx}",
     "lint:fix": "eslint --fix src/**/*.{js,jsx,ts,tsx}"
   }
@@ -234,7 +234,7 @@ JavaScript features and TypeScript syntax.
 changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx)$')
 if [ -n "$changed_files" ]; then
     for file in $changed_files; do
-        ccfeedback --file "$file"
+        gismo --file "$file"
     done
 fi
 ```
@@ -260,11 +260,11 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Install ccfeedback
-      run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+    - name: Install gismo
+      run: go install github.com/jrossi/gismo/cmd/gismo@latest
 
     - name: Lint JavaScript
-      run: ccfeedback --config .claude/ccfeedback.json
+      run: gismo --config .claude/gismo.json
 ```
 
 ## Project-Specific Configurations
@@ -379,7 +379,7 @@ Reduce rule complexity or increase timeout:
 Enable verbose ESLint output:
 
 ```bash
-ccfeedback --config .claude/ccfeedback.json --verbose
+gismo --config .claude/gismo.json --verbose
 ```
 
 ## Best Practices

@@ -3,25 +3,25 @@ title: "Configuration"
 linkTitle: "Configuration"
 weight: 30
 description: >
-  Configure CCFeedback linters and rules for your project
+  Configure Gismo linters and rules for your project
 ---
 
 # Configuration
 
-CCFeedback uses a flexible configuration system that supports hierarchical loading and pattern-based rule overrides.
+Gismo uses a flexible configuration system that supports hierarchical loading and pattern-based rule overrides.
 
 ## Configuration Loading Order
 
-CCFeedback loads configuration files in this order (later files override earlier ones):
+Gismo loads configuration files in this order (later files override earlier ones):
 
-1. `~/.claude/ccfeedback.json` - User's global configuration
-2. `PROJECT_DIR/.claude/ccfeedback.json` - Project-specific configuration
-3. `PROJECT_DIR/.claude/ccfeedback.local.json` - Local overrides (git-ignored)
+1. `~/.claude/gismo.json` - User's global configuration
+2. `PROJECT_DIR/.claude/gismo.json` - Project-specific configuration
+3. `PROJECT_DIR/.claude/gismo.local.json` - Local overrides (git-ignored)
 
 You can also specify a custom configuration file:
 
 ```bash
-ccfeedback --config path/to/config.json
+gismo --config path/to/config.json
 ```
 
 ## Basic Configuration
@@ -295,7 +295,7 @@ Use pattern-based rules to apply different configurations to specific files:
 ### Best Practices
 
 1. **Start Simple**: Begin with basic configuration and add complexity as needed
-2. **Use Local Overrides**: Use `.claude/ccfeedback.local.json` for personal preferences
+2. **Use Local Overrides**: Use `.claude/gismo.local.json` for personal preferences
 3. **Pattern Specificity**: Use specific patterns to handle special cases
 4. **Disable vs Configure**: Prefer disabling specific checks over entire linters
 
@@ -328,13 +328,13 @@ Use different configurations for different environments:
 
 ```bash
 # Development
-ccfeedback --config .claude/ccfeedback.dev.json
+gismo --config .claude/gismo.dev.json
 
 # CI/CD
-ccfeedback --config .claude/ccfeedback.ci.json
+gismo --config .claude/gismo.ci.json
 
 # Production
-ccfeedback --config .claude/ccfeedback.prod.json
+gismo --config .claude/gismo.prod.json
 ```
 
 ## Validation
@@ -343,13 +343,13 @@ Test your configuration:
 
 ```bash
 # Validate configuration syntax
-ccfeedback --config .claude/ccfeedback.json --validate
+gismo --config .claude/gismo.json --validate
 
 # Dry run to see what would be checked
-ccfeedback --config .claude/ccfeedback.json --dry-run
+gismo --config .claude/gismo.json --dry-run
 
 # Verbose output for debugging
-ccfeedback --config .claude/ccfeedback.json --verbose
+gismo --config .claude/gismo.json --verbose
 ```
 
 ## Next Steps

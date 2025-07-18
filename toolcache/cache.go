@@ -237,7 +237,7 @@ func GetCacheManager(currentPath string) (*CacheManager, error) {
 	cacheManagerOnce.Do(func() {
 		globalCacheManager = &CacheManager{
 			gitRoot:   claudeDir,
-			cachePath: filepath.Join(claudeDir, "ccfeedback-tools.json"),
+			cachePath: filepath.Join(claudeDir, "gismo-tools.json"),
 		}
 	})
 
@@ -245,7 +245,7 @@ func GetCacheManager(currentPath string) (*CacheManager, error) {
 		// Different .claude directory, create new cache manager
 		return &CacheManager{
 			gitRoot:   claudeDir,
-			cachePath: filepath.Join(claudeDir, "ccfeedback-tools.json"),
+			cachePath: filepath.Join(claudeDir, "gismo-tools.json"),
 		}, nil
 	}
 

@@ -1,16 +1,16 @@
 ---
-title: "CCFeedback"
+title: "Gismo"
 linkTitle: "Home"
 type: "docs"
 ---
 
-# CCFeedback
+# Gismo
 
 High-performance Go library and CLI tool for handling Claude Code hooks with built-in linting capabilities.
 
 ## Overview
 
-CCFeedback serves as a hook processor that validates and analyzes code before and after tool execution in
+Gismo serves as a hook processor that validates and analyzes code before and after tool execution in
 Claude Code workflows. It provides comprehensive linting support for multiple languages and offers both library
 and CLI interfaces.
 
@@ -24,9 +24,9 @@ and CLI interfaces.
 
 ## Quick Start
 
-Get started with CCFeedback in minutes:
+Get started with Gismo in minutes:
 
-1. **[Install CCFeedback](installation/)** - Multiple installation options
+1. **[Install Gismo](installation/)** - Multiple installation options
 2. **[Quick Start Guide](quickstart/)** - Basic usage examples
 3. **[Configuration](configuration/)** - Set up your linting rules
 
@@ -39,12 +39,12 @@ Get started with CCFeedback in minutes:
 
 ## Performance
 
-CCFeedback is built for speed:
+Gismo is built for speed:
 - Message parsing: ~700ns per message
 - Rule evaluation: <1ns for simple rules
 - Go linting: ~100ms enhanced / ~4μs fallback
 - Full pipeline: ~22ns handler processing
 
 [Get Started](installation/){.btn .btn-primary .btn-lg}
-[View on GitHub](https://github.com/jrossi/ccfeedback){.btn .btn-secondary .btn-lg}
+[View on GitHub](https://github.com/jrossi/gismo){.btn .btn-secondary .btn-lg}
 <!-- Re-trigger deployment -->

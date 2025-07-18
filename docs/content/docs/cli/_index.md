@@ -8,12 +8,12 @@ description: >
 
 # CLI Reference
 
-CCFeedback provides a command-line interface for processing Claude Code hooks and analyzing linting configurations.
+Gismo provides a command-line interface for processing Claude Code hooks and analyzing linting configurations.
 
 ## Installation
 
 ```bash
-go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+go install github.com/jrossi/gismo/cmd/gismo@latest
 ```
 
 ## Commands
@@ -24,55 +24,55 @@ Process Claude Code hook messages from stdin:
 
 ```bash
 # Basic usage - reads from stdin
-ccfeedback
+gismo
 
 # With custom timeout
-ccfeedback -timeout 30s
+gismo -timeout 30s
 
 # With custom configuration
-ccfeedback -config my-config.json
+gismo -config my-config.json
 
 # Debug mode
-ccfeedback -debug
+gismo -debug
 ```
 
 ### init Command
 
-Set up ccfeedback in Claude Code settings:
+Set up gismo in Claude Code settings:
 
 ```bash
-# Initialize ccfeedback hooks (updates both global and project settings)
-ccfeedback init
+# Initialize gismo hooks (updates both global and project settings)
+gismo init
 
 # Only update global settings (~/.claude/settings.json)
-ccfeedback init --global
+gismo init --global
 
 # Only update project settings (.claude/settings.json)
-ccfeedback init --project
+gismo init --project
 
 # Preview changes without applying them
-ccfeedback init --dry-run
+gismo init --dry-run
 
 # Apply changes without confirmation prompt
-ccfeedback init --force
+gismo init --force
 
 # Configure for specific tools only
-ccfeedback init --matcher "Write"    # Only for Write tool
-ccfeedback init --matcher "Edit"     # Only for Edit tool
-ccfeedback init --matcher "Bash"     # Only for Bash tool
-ccfeedback init --matcher ""         # All tools (default)
+gismo init --matcher "Write"    # Only for Write tool
+gismo init --matcher "Edit"     # Only for Edit tool
+gismo init --matcher "Bash"     # Only for Bash tool
+gismo init --matcher ""         # All tools (default)
 ```
 
 The `init` command:
-- Adds ccfeedback as a PostToolUse hook in Claude Code settings
+- Adds gismo as a PostToolUse hook in Claude Code settings
 - Shows proposed changes in diff format before applying
 - Creates timestamped backups of existing settings
 - Preserves all existing configuration and custom fields
-- Detects when ccfeedback is already configured
+- Detects when gismo is already configured
 
 ### show Command
 
-The `show` command provides comprehensive visibility into ccfeedback's configuration and behavior.
+The `show` command provides comprehensive visibility into gismo's configuration and behavior.
 It includes several subcommands:
 
 #### show config
@@ -81,13 +81,13 @@ Display the current merged configuration:
 
 ```bash
 # Show current configuration
-ccfeedback show config
+gismo show config
 
 # With custom configuration file
-ccfeedback show --config team-config.json config
+gismo show --config team-config.json config
 
 # Debug mode shows configuration sources
-ccfeedback show --debug config
+gismo show --debug config
 ```
 
 #### show filter
@@ -96,25 +96,25 @@ Analyze which rules and linters apply to specific files:
 
 ```bash
 # Show configuration for a single file
-ccfeedback show filter internal/api.go
+gismo show filter internal/api.go
 
 # With custom configuration
-ccfeedback show --config team-config.json filter pkg/api.go
+gismo show --config team-config.json filter pkg/api.go
 
 # Debug mode shows pattern matching details
-ccfeedback show --debug filter internal/test.go
+gismo show --debug filter internal/test.go
 ```
 
 #### show setup
 
-Check ccfeedback setup status:
+Check gismo setup status:
 
 ```bash
 # Show setup status
-ccfeedback show setup
+gismo show setup
 
 # Debug mode includes environment details
-ccfeedback show --debug setup
+gismo show --debug setup
 ```
 
 #### show linters
@@ -123,10 +123,10 @@ List all available linters and their status:
 
 ```bash
 # Show all linters
-ccfeedback show linters
+gismo show linters
 
 # With custom configuration
-ccfeedback show --config team-config.json linters
+gismo show --config team-config.json linters
 ```
 
 #### Backward Compatibility
@@ -135,8 +135,8 @@ The old `show-actions` command still works and maps to `show filter`:
 
 ```bash
 # These are equivalent:
-ccfeedback show-actions internal/api.go
-ccfeedback show filter internal/api.go
+gismo show-actions internal/api.go
+gismo show filter internal/api.go
 ```
 
 #### Show Command Features
@@ -165,10 +165,10 @@ ccfeedback show filter internal/api.go
 
 ## Configuration
 
-CCFeedback looks for configuration files in the following order:
-1. `~/.claude/ccfeedback.json` (user global)
-2. `.claude/ccfeedback.json` (project-specific)
-3. `.claude/ccfeedback.local.json` (local overrides, git-ignored)
+Gismo looks for configuration files in the following order:
+1. `~/.claude/gismo.json` (user global)
+2. `.claude/gismo.json` (project-specific)
+3. `.claude/gismo.local.json` (local overrides, git-ignored)
 4. File specified with `-config` flag
 
 ## Hook Processing
@@ -208,7 +208,7 @@ CCFeedback looks for configuration files in the following order:
 
 ### Claude Code Settings
 
-After running `ccfeedback init`, your Claude Code settings will include:
+After running `gismo init`, your Claude Code settings will include:
 
 ```json
 {
@@ -219,7 +219,7 @@ After running `ccfeedback init`, your Claude Code settings will include:
         "hooks": [
           {
             "type": "command",
-            "command": "ccfeedback",
+            "command": "gismo",
             "timeout": 60000,
             "continueOnError": false
           }
@@ -232,7 +232,7 @@ After running `ccfeedback init`, your Claude Code settings will include:
 
 ### Project Configuration
 
-Example `.claude/ccfeedback.json`:
+Example `.claude/gismo.json`:
 
 ```json
 {
@@ -266,13 +266,13 @@ Example `.claude/ccfeedback.json`:
 
 ### Common Issues
 
-#### ccfeedback not found
+#### gismo not found
 
-Ensure ccfeedback is in your PATH:
+Ensure gismo is in your PATH:
 
 ```bash
 # Check installation
-which ccfeedback
+which gismo
 
 # Add Go bin to PATH if needed
 export PATH=$PATH:$(go env GOPATH)/bin
@@ -283,7 +283,7 @@ export PATH=$PATH:$(go env GOPATH)/bin
 Check which configuration files are being loaded:
 
 ```bash
-ccfeedback -debug show-actions test.go
+gismo -debug show-actions test.go
 ```
 
 #### Hook not triggering
@@ -295,17 +295,17 @@ Verify Claude Code settings:
 cat ~/.claude/settings.json | jq '.hooks.PostToolUse'
 
 # Re-run init if needed
-ccfeedback init
+gismo init
 ```
 
 ### Getting Help
 
 ```bash
 # Show usage
-ccfeedback -help
+gismo -help
 
 # Show version
-ccfeedback -version
+gismo -version
 ```
 
 ## Related Documentation

@@ -1,5 +1,5 @@
 # .goreleaser.yml
-# GoReleaser configuration for ccfeedback
+# GoReleaser configuration for gismo
 # Documentation: https://goreleaser.com
 
 version: 2
@@ -12,9 +12,9 @@ before:
 
 # Build configuration
 builds:
-  - id: ccfeedback
-    main: ./cmd/ccfeedback
-    binary: ccfeedback
+  - id: gismo
+    main: ./cmd/gismo
+    binary: gismo
     
     # Custom build flags
     flags:
@@ -50,9 +50,9 @@ builds:
     env:
       - CGO_ENABLED=0
 
-  - id: ccfeedback-init
-    main: ./cmd/ccfeedback-init
-    binary: ccfeedback-init
+  - id: gismo-init
+    main: ./cmd/gismo-init
+    binary: gismo-init
     
     # Custom build flags
     flags:
@@ -88,9 +88,9 @@ builds:
     env:
       - CGO_ENABLED=0
 
-  - id: ccfeedback-show
-    main: ./cmd/ccfeedback-show
-    binary: ccfeedback-show
+  - id: gismo-show
+    main: ./cmd/gismo-show
+    binary: gismo-show
     
     # Custom build flags
     flags:
@@ -128,7 +128,7 @@ builds:
 
 # Archive configuration
 archives:
-  - id: ccfeedback
+  - id: gismo
     name_template: >-
       {{ .ProjectName }}_
       {{- .Version }}_
@@ -145,9 +145,9 @@ archives:
     
     # Include all three binaries
     builds:
-      - ccfeedback
-      - ccfeedback-init
-      - ccfeedback-show
+      - gismo
+      - gismo-init
+      - gismo-show
     
     # Files to include in archive
     files:
@@ -201,7 +201,7 @@ changelog:
 release:
   github:
     owner: jrossi
-    name: ccfeedback
+    name: gismo
   
   # Release name template
   name_template: "{{.ProjectName}} v{{.Version}}"
@@ -215,22 +215,22 @@ release:
   
   # Release notes
   header: |
-    ## ccfeedback {{.Version}} ({{ .Date }})
+    ## gismo {{.Version}} ({{ .Date }})
     
-    Welcome to this new release of ccfeedback!
+    Welcome to this new release of gismo!
   
   footer: |
     ## Thanks!
     
-    Those were the changes on {{ .Tag }}. Thank you for using ccfeedback!
+    Those were the changes on {{ .Tag }}. Thank you for using gismo!
     
     ### Installation
     
     #### Install with Homebrew (macOS/Linux)
     
     ```bash
-    brew tap jrossi/ccfeedback https://github.com/jrossi/ccfeedback
-    brew install jrossi/ccfeedback/ccfeedback
+    brew tap jrossi/gismo https://github.com/jrossi/gismo
+    brew install jrossi/gismo/gismo
     ```
     
     #### Download Binary
@@ -240,30 +240,30 @@ release:
     #### Install with Go
     
     ```bash
-    go install github.com/jrossi/ccfeedback/cmd/ccfeedback@{{.Tag}}
+    go install github.com/jrossi/gismo/cmd/gismo@{{.Tag}}
     ```
     
     #### Install with curl (Linux/macOS)
     
     ```bash
     # Linux x86_64
-    curl -L https://github.com/jrossi/ccfeedback/releases/download/{{.Tag}}/ccfeedback_{{.Version}}_Linux_x86_64.tar.gz | tar xz
+    curl -L https://github.com/jrossi/gismo/releases/download/{{.Tag}}/gismo_{{.Version}}_Linux_x86_64.tar.gz | tar xz
     
     # macOS x86_64
-    curl -L https://github.com/jrossi/ccfeedback/releases/download/{{.Tag}}/ccfeedback_{{.Version}}_Darwin_x86_64.tar.gz | tar xz
+    curl -L https://github.com/jrossi/gismo/releases/download/{{.Tag}}/gismo_{{.Version}}_Darwin_x86_64.tar.gz | tar xz
     
     # macOS arm64 (M1/M2)
-    curl -L https://github.com/jrossi/ccfeedback/releases/download/{{.Tag}}/ccfeedback_{{.Version}}_Darwin_arm64.tar.gz | tar xz
+    curl -L https://github.com/jrossi/gismo/releases/download/{{.Tag}}/gismo_{{.Version}}_Darwin_arm64.tar.gz | tar xz
     ```
 
 # Homebrew tap configuration
 brews:
-  - name: ccfeedback
+  - name: gismo
     
     # GitHub repository to push the formula to
     repository:
       owner: jrossi
-      name: ccfeedback
+      name: gismo
       branch: main
     
     # Directory to store the formula in the repository
@@ -278,10 +278,10 @@ brews:
     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
     
     # Homepage
-    homepage: "https://jeremyrossi.com/ccfeedback/docs/"
+    homepage: "https://gismo.run"
     
     # Description
-    description: "Claude Code Feedback - Real-time linting feedback for AI code editors"
+    description: "Gismo - Real-time linting feedback for AI code editors"
     
     # License
     license: "Apache-2.0"
@@ -291,13 +291,13 @@ brews:
     
     # Installation script
     install: |
-      bin.install "ccfeedback"
-      bin.install "ccfeedback-init"
-      bin.install "ccfeedback-show"
+      bin.install "gismo"
+      bin.install "gismo-init"
+      bin.install "gismo-show"
     
     # Test script
     test: |
-      system "#{bin}/ccfeedback", "--version"
+      system "#{bin}/gismo", "--version"
     
     # Skip upload (set to false when ready to publish)
     skip_upload: false

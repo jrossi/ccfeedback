@@ -46,7 +46,7 @@ func TestGetCacheManager(t *testing.T) {
 		t.Errorf("Expected gitRoot to be %s, got %s", claudeDir, manager.gitRoot)
 	}
 
-	expectedCachePath := filepath.Join(claudeDir, "ccfeedback-tools.json")
+	expectedCachePath := filepath.Join(claudeDir, "gismo-tools.json")
 	if manager.cachePath != expectedCachePath {
 		t.Errorf("Expected cachePath to be %s, got %s", expectedCachePath, manager.cachePath)
 	}

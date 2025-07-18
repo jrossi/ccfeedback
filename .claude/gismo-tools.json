@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-07-18T09:24:59.596378-04:00",
+  "gitRoot": "/Users/jrossi/src/ccfeedback/.claude",
+  "hostname": "SSNC-HGTJYHKJ7T",
+  "tools": {
+    "go": {},
+    "javascript": {
+      "biome": {
+        "path": "",
+        "available": false,
+        "lastCheck": "2025-07-18T09:24:59.579381-04:00",
+        "source": "",
+        "modTime": "0001-01-01T00:00:00Z"
+      },
+      "oxlint": {
+        "path": "",
+        "available": false,
+        "lastCheck": "2025-07-18T09:24:59.585613-04:00",
+        "source": "",
+        "modTime": "0001-01-01T00:00:00Z"
+      },
+      "eslint": {
+        "path": "",
+        "available": false,
+        "lastCheck": "2025-07-18T09:24:59.591857-04:00",
+        "source": "",
+        "modTime": "0001-01-01T00:00:00Z"
+      }
+    },
+    "python": {},
+    "json": {},
+    "markdown": {},
+    "system": {},
+    "git": {},
+    "runtime": {}
+  },
+  "projects": {
+    "configs": {}
+  },
+  "performance": {
+    "toolPerformance": {},
+    "linterStats": {},
+    "systemInfo": {
+      "cpuCores": 16,
+      "totalMemory": 0,
+      "os": "darwin",
+      "architecture": "arm64",
+      "shell": "/bin/zsh"
+    },
+    "lastUpdated": "2025-07-18T09:24:59.57909-04:00"
+  }
+}

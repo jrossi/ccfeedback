@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/gismo/linters"
 )
 
 // PythonLinter handles linting of Python files using UV/UVX

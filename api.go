@@ -1,4 +1,4 @@
-package ccfeedback
+package gismo
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// API provides the main interface for the ccfeedback library
+// API provides the main interface for the gismo library
 type API struct {
 	executor *Executor
 	parser   *Parser

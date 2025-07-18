@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/gismo/linters"
 )
 
 // RustLinter handles Rust file linting, formatting, and test running with cargo tools

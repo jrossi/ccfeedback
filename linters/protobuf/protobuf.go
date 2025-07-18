@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/gismo/linters"
 )
 
 // ProtobufLinter handles Protocol Buffer file linting using buf, protolint, or protoc

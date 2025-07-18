@@ -8,7 +8,7 @@ description: >
 
 # Rust Linting
 
-CCFeedback provides comprehensive Rust linting support using cargo's built-in tools: `cargo clippy` for linting
+Gismo provides comprehensive Rust linting support using cargo's built-in tools: `cargo clippy` for linting
 and `cargo fmt` for formatting checks.
 
 ## Prerequisites
@@ -179,10 +179,10 @@ rustup component add rustfmt
     toolchain: stable
     components: clippy, rustfmt
 
-- name: Run CCFeedback
+- name: Run Gismo
   run: |
-    go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
-    ccfeedback --config .claude/ccfeedback.json
+    go install github.com/jrossi/gismo/cmd/gismo@latest
+    gismo --config .claude/gismo.json
 ```
 
 ### GitLab CI
@@ -192,9 +192,9 @@ lint:
   image: rust:latest
   before_script:
     - rustup component add clippy rustfmt
-    - go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+    - go install github.com/jrossi/gismo/cmd/gismo@latest
   script:
-    - ccfeedback --config .claude/ccfeedback.json
+    - gismo --config .claude/gismo.json
 ```
 
 ## Performance Characteristics
@@ -211,7 +211,7 @@ lint:
 
 ```text
 > Write operation feedback:
-- [ccfeedback:src/main.rs]: src/main.rs:5:9: warning: unused variable: `unused_var` (unused_variables)
+- [gismo:src/main.rs]: src/main.rs:5:9: warning: unused variable: `unused_var` (unused_variables)
   src/main.rs:12:1: warning: function is never used: `dead_fn` (dead_code)
   src/main.rs:1:1: warning: File is not properly formatted with rustfmt (rustfmt)
 
@@ -225,13 +225,13 @@ lint:
 2. **Configure clippy.toml**: Set project-specific lint configurations
 3. **Feature Flags**: Test with different feature combinations
 4. **Workspace Mode**: Use workspace-wide configuration for consistency
-5. **CI Integration**: Run CCFeedback in CI to catch issues early
+5. **CI Integration**: Run Gismo in CI to catch issues early
 
 ## Rust-Specific Features
 
 ### Cargo Workspace Detection
 
-CCFeedback automatically detects Cargo workspaces and applies linting appropriately:
+Gismo automatically detects Cargo workspaces and applies linting appropriately:
 
 ```toml
 # workspace Cargo.toml

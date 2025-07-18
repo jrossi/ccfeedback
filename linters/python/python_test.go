@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/gismo/linters"
 )
 
 func TestPythonLinter_CanHandle(t *testing.T) {

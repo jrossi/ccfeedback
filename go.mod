@@ -1,4 +1,4 @@
-module github.com/jrossi/ccfeedback
+module github.com/jrossi/gismo
 
 go 1.23.2
 

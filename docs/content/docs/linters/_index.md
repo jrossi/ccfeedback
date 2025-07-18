@@ -8,7 +8,7 @@ description: >
 
 # Linters
 
-CCFeedback provides comprehensive linting support for multiple programming languages and file formats.
+Gismo provides comprehensive linting support for multiple programming languages and file formats.
 
 ## Supported Linters
 
@@ -153,7 +153,7 @@ Apply different rules to different file patterns:
 ```bash
 #!/bin/bash
 # .git/hooks/pre-commit
-ccfeedback --config .claude/ccfeedback.json
+gismo --config .claude/gismo.json
 ```
 
 ### CI/CD Pipeline
@@ -162,18 +162,18 @@ ccfeedback --config .claude/ccfeedback.json
 # GitHub Actions
 - name: Lint Code
   run: |
-    go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
-    ccfeedback --config .claude/ccfeedback.json
+    go install github.com/jrossi/gismo/cmd/gismo@latest
+    gismo --config .claude/gismo.json
 ```
 
 ### Make Target
 
 ```makefile
 lint:
-	ccfeedback --config .claude/ccfeedback.json
+	gismo --config .claude/gismo.json
 
 lint-fix:
-	ccfeedback --config .claude/ccfeedback.json --fix
+	gismo --config .claude/gismo.json --fix
 ```
 
 ## Language-Specific Guides
@@ -190,7 +190,7 @@ lint-fix:
 
 ### Custom Rule Engines
 
-CCFeedback supports pluggable rule engines for custom linting logic:
+Gismo supports pluggable rule engines for custom linting logic:
 
 ```go
 type CustomEngine struct{}
@@ -211,7 +211,7 @@ func (e *CustomEngine) ProcessMessage(ctx context.Context, msg *Message) (*Resul
 Chain multiple rule engines for complex processing:
 
 ```go
-engine := ccfeedback.NewCompositeRuleEngine(
+engine := gismo.NewCompositeRuleEngine(
     &GoLintEngine{},
     &CustomSecurityEngine{},
     &DocumentationEngine{},
@@ -232,7 +232,7 @@ engine := ccfeedback.NewCompositeRuleEngine(
 Enable verbose output for troubleshooting:
 
 ```bash
-ccfeedback --config .claude/ccfeedback.json --verbose
+gismo --config .claude/gismo.json --verbose
 ```
 
 ### Performance Profiling
@@ -240,5 +240,5 @@ ccfeedback --config .claude/ccfeedback.json --verbose
 Profile linter performance:
 
 ```bash
-ccfeedback --config .claude/ccfeedback.json --profile
+gismo --config .claude/gismo.json --profile
 ```

@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	gojson "github.com/goccy/go-json"
-	"github.com/jrossi/ccfeedback/linters"
+	"github.com/jrossi/gismo/linters"
 )
 
 // JSONLinter handles linting of JSON and JSON-L files

@@ -1,4 +1,4 @@
-package ccfeedback
+package gismo
 
 import (
 	"context"
@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jrossi/ccfeedback/linters"
-	"github.com/jrossi/ccfeedback/linters/golang"
-	"github.com/jrossi/ccfeedback/linters/javascript"
-	jsonlinter "github.com/jrossi/ccfeedback/linters/json"
-	"github.com/jrossi/ccfeedback/linters/markdown"
-	"github.com/jrossi/ccfeedback/linters/protobuf"
-	"github.com/jrossi/ccfeedback/linters/python"
-	"github.com/jrossi/ccfeedback/linters/rust"
+	"github.com/jrossi/gismo/linters"
+	"github.com/jrossi/gismo/linters/golang"
+	"github.com/jrossi/gismo/linters/javascript"
+	jsonlinter "github.com/jrossi/gismo/linters/json"
+	"github.com/jrossi/gismo/linters/markdown"
+	"github.com/jrossi/gismo/linters/protobuf"
+	"github.com/jrossi/gismo/linters/python"
+	"github.com/jrossi/gismo/linters/rust"
 )
 
 // LintingRuleEngine implements RuleEngine to provide linting functionality
@@ -236,7 +236,7 @@ func (e *LintingRuleEngine) EvaluatePreToolUse(ctx context.Context, msg *PreTool
 	}
 
 	// Write success message to stderr (matching smart-lint.sh behavior)
-	fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: ✅ Style clean. Continue with your task.\n")
+	fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [gismo]: ✅ Style clean. Continue with your task.\n")
 	return &HookResponse{Decision: "approve"}, nil
 }
 
@@ -245,14 +245,14 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 	// Only check Write and Edit operations
 	if msg.ToolName != "Write" && msg.ToolName != "Edit" && msg.ToolName != "MultiEdit" {
 		// Show status for non-file operations on stderr (matching smart-lint.sh behavior)
-		fmt.Fprintf(os.Stderr, "\n> Tool execution feedback:\n  - [ccfeedback]: ℹ️  %s operation completed (no linting required)\n", msg.ToolName)
+		fmt.Fprintf(os.Stderr, "\n> Tool execution feedback:\n  - [gismo]: ℹ️  %s operation completed (no linting required)\n", msg.ToolName)
 		return nil, nil
 	}
 
 	// Skip if there was an error
 	if msg.ToolError != "" {
 		// Tool errors trigger exit code 1, shown on stderr
-		fmt.Fprintf(os.Stderr, "\n> Tool execution feedback:\n  - [ccfeedback]: ⚠️  Tool error: %s (skipping linting)\n", msg.ToolError)
+		fmt.Fprintf(os.Stderr, "\n> Tool execution feedback:\n  - [gismo]: ⚠️  Tool error: %s (skipping linting)\n", msg.ToolError)
 		return nil, nil
 	}
 
@@ -276,9 +276,9 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 	if err != nil {
 		// File errors shown on stderr (matching smart-lint.sh behavior)
 		if os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: ⚠️  File not found: %s\n", filePath)
+			fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [gismo]: ⚠️  File not found: %s\n", filePath)
 		} else {
-			fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: ⚠️  Cannot read file: %v\n", err)
+			fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [gismo]: ⚠️  Cannot read file: %v\n", err)
 		}
 		return nil, nil
 	}
@@ -317,7 +317,7 @@ func (e *LintingRuleEngine) EvaluatePostToolUse(ctx context.Context, msg *PostTo
 		fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n%s\n", output)
 	} else if len(errs) == 0 {
 		// Success shown on stderr (matching smart-lint.sh behavior)
-		fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [ccfeedback]: ✅ Style clean. Continue with your task.\n")
+		fmt.Fprintf(os.Stderr, "\n> Write operation feedback:\n  - [gismo]: ✅ Style clean. Continue with your task.\n")
 	}
 
 	// Check for associated test files if it's a Go file
@@ -366,7 +366,7 @@ func (e *LintingRuleEngine) formatLintOutput(filePath string, issues []linters.I
 		// Format: file:line:column: message
 		if issue.Line > 0 && issue.Column > 0 {
 			output.WriteString(fmt.Sprintf("%s:%d:%d: %s",
-				strings.TrimPrefix(filePath, "/Users/jrossi/src/ccfeedback/"),
+				strings.TrimPrefix(filePath, "/Users/jrossi/src/gismo/"),
 				issue.Line, issue.Column, issue.Message))
 		} else {
 			output.WriteString(issue.Message)

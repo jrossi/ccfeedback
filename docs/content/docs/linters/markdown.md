@@ -8,7 +8,7 @@ description: >
 
 # Markdown Linting
 
-CCFeedback provides comprehensive markdown linting using the goldmark parser with support for frontmatter
+Gismo provides comprehensive markdown linting using the goldmark parser with support for frontmatter
 validation and documentation standards enforcement.
 
 ## Features
@@ -252,7 +252,7 @@ draft: false
 changed_files=$(git diff --cached --name-only --diff-filter=ACM | grep '\.md$')
 if [ -n "$changed_files" ]; then
     for file in $changed_files; do
-        ccfeedback --file "$file"
+        gismo --file "$file"
     done
 fi
 ```
@@ -263,10 +263,10 @@ fi
 .PHONY: lint-docs check-docs
 
 lint-docs:
-	ccfeedback --config .claude/ccfeedback.json --filter="*.md"
+	gismo --config .claude/gismo.json --filter="*.md"
 
 check-docs:
-	find docs -name "*.md" -exec ccfeedback --file {} \;
+	find docs -name "*.md" -exec gismo --file {} \;
 
 fix-docs:
 	find docs -name "*.md" -exec prettier --write {} \;
@@ -286,11 +286,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install ccfeedback
-      run: go install github.com/jrossi/ccfeedback/cmd/ccfeedback@latest
+    - name: Install gismo
+      run: go install github.com/jrossi/gismo/cmd/gismo@latest
 
     - name: Lint documentation
-      run: ccfeedback --config .claude/ccfeedback.json
+      run: gismo --config .claude/gismo.json
 ```
 
 ## Common Rule Configurations
@@ -383,7 +383,7 @@ Use file size limits or exclude large files:
 Enable verbose output for troubleshooting:
 
 ```bash
-ccfeedback --config .claude/ccfeedback.json --verbose
+gismo --config .claude/gismo.json --verbose
 ```
 
 ## Best Practices

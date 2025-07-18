@@ -1,7 +1,7 @@
 .PHONY: all test build clean fmt lint install bench snapshot release
 
 # Build information
-BINARY_NAME=ccfeedback
+BINARY_NAME=gismo
 GO=go
 GOFLAGS=-trimpath
 
@@ -20,9 +20,9 @@ LDFLAGS=-s -w \
 all: fmt lint test build
 
 build:
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY_NAME) ./cmd/ccfeedback
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-init ./cmd/ccfeedback-init
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-show ./cmd/ccfeedback-show
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY_NAME) ./cmd/gismo
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-init ./cmd/gismo-init
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(BINARY_NAME)-show ./cmd/gismo-show
 
 test:
 	$(GO) test -v -race -coverprofile=coverage.out ./...
@@ -39,9 +39,9 @@ lint:
 	golangci-lint run ./...
 
 install:
-	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/ccfeedback
-	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/ccfeedback-init
-	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/ccfeedback-show
+	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/gismo
+	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/gismo-init
+	$(GO) install $(GOFLAGS) -ldflags "$(LDFLAGS)" ./cmd/gismo-show
 
 clean:
 	rm -f $(BINARY_NAME)
