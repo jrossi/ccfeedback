@@ -366,7 +366,7 @@ func showFilter(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, confi
 
 	if len(applicableLinters) > 0 {
 		// Show the execution tree for different operations
-		showExecutionTree(filePath, applicableLinters, appConfig, ruleEngine)
+		showExecutionTree(filePath, applicableLinters, appConfig, ruleEngine, customConfigFile)
 	} else {
 		fmt.Printf("ℹ️  This file type is not monitored by ccfeedback.\n")
 		fmt.Printf("   Claude Code operations on this file will not trigger linting.\n")
@@ -376,7 +376,7 @@ func showFilter(filePath string, ruleEngine *ccfeedback.LintingRuleEngine, confi
 }
 
 // showExecutionTree displays a visual tree of how Claude Code hooks execute
-func showExecutionTree(filePath string, applicableLinters []string, appConfig *ccfeedback.AppConfig, ruleEngine *ccfeedback.LintingRuleEngine) {
+func showExecutionTree(filePath string, applicableLinters []string, appConfig *ccfeedback.AppConfig, ruleEngine *ccfeedback.LintingRuleEngine, customConfigFile string) {
 	ext := filepath.Ext(filePath)
 
 	// ANSI color codes
@@ -401,7 +401,32 @@ func showExecutionTree(filePath string, applicableLinters []string, appConfig *c
 		space      = " "
 	)
 
-	fmt.Printf("%sWhen Claude Code operates on this file:%s\n\n", bold, reset)
+	// First show which settings.json file configures the hooks
+	fmt.Printf("%sHook Configuration Source:%s\n", bold, reset)
+
+	// Check for Claude Code settings.json files
+	homeDir, _ := os.UserHomeDir()
+	cwd, _ := os.Getwd()
+
+	settingsPaths := []ConfigPath{
+		{filepath.Join(homeDir, ".claude", "settings.json"), "global hooks"},
+		{filepath.Join(cwd, ".claude", "settings.json"), "project hooks"},
+	}
+
+	foundSettings := false
+	for _, sp := range settingsPaths {
+		if _, err := os.Stat(sp.path); err == nil {
+			fmt.Printf("%s✓ %s (%s)%s\n", green, sp.path, sp.desc, reset)
+			foundSettings = true
+		}
+	}
+
+	if !foundSettings {
+		fmt.Printf("%s⚠️  No Claude Code settings.json found%s\n", yellow, reset)
+		fmt.Printf("   Run 'ccfeedback init' to configure hooks\n")
+	}
+
+	fmt.Printf("\n%sWhen Claude Code operates on this file:%s\n\n", bold, reset)
 
 	// PreToolUse Hook - only for Write
 	fmt.Printf("%s%sPreToolUse Hook%s %s(Write operation only)%s\n", green, bold, reset, dim, reset)
