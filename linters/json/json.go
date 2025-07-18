@@ -4,12 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
 	gojson "github.com/goccy/go-json"
 	"github.com/jrossi/gismo/linters"
+	"github.com/kaptinlin/jsonschema"
 )
 
 // JSONLinter handles linting of JSON and JSON-L files
@@ -18,6 +22,8 @@ type JSONLinter struct {
 	// Object pools for performance
 	bufferPool  *sync.Pool
 	scannerPool *sync.Pool
+	// Schema cache for performance
+	schemas map[string]*jsonschema.Schema
 }
 
 // NewJSONLinter creates a new JSON linter with default configuration
@@ -32,7 +38,8 @@ func NewJSONLinterWithConfig(config *JSONConfig) *JSONLinter {
 	}
 
 	return &JSONLinter{
-		config: config,
+		config:  config,
+		schemas: make(map[string]*jsonschema.Schema),
 		bufferPool: &sync.Pool{
 			New: func() interface{} {
 				return bytes.NewBuffer(make([]byte, 0, 4096))
@@ -304,8 +311,81 @@ func (l *JSONLinter) validateJSONStructure(content []byte, filePath string, resu
 		return nil
 	}
 
-	// Additional structural validations can be added here
-	// For example: checking for specific required fields, data types, etc.
+	// Schema validation if enabled
+	if l.config.ValidationLevel != nil && *l.config.ValidationLevel >= ValidationSchema {
+		if err := l.validateJSONSchema(data, filePath, result); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// loadSchema loads and compiles a JSON schema from either inline JSON or file path
+func (l *JSONLinter) loadSchema(schemaData *json.RawMessage) (*jsonschema.Schema, error) {
+	if schemaData == nil {
+		return nil, fmt.Errorf("schema data is nil")
+	}
+
+	compiler := jsonschema.NewCompiler()
+
+	// Try to detect if this is a file path (string) or inline schema (object)
+	var schemaPath string
+	if err := json.Unmarshal(*schemaData, &schemaPath); err == nil {
+		// It's a string, treat as file path
+		if !filepath.IsAbs(schemaPath) {
+			// Make relative paths relative to current working directory
+			wd, err := os.Getwd()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get working directory: %w", err)
+			}
+			schemaPath = filepath.Join(wd, schemaPath)
+		}
+
+		// Load schema from file
+		schemaBytes, err := os.ReadFile(schemaPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read schema file %s: %w", schemaPath, err)
+		}
+
+		return compiler.Compile(schemaBytes)
+	}
+
+	// Not a string, treat as inline schema object
+	return compiler.Compile([]byte(*schemaData))
+}
+
+// validateJSONSchema validates JSON data against configured schema
+func (l *JSONLinter) validateJSONSchema(data interface{}, filePath string, result *linters.LintResult) error {
+	if l.config == nil || l.config.JSONSchema == nil {
+		return nil
+	}
+
+	schema, err := l.loadSchema(l.config.JSONSchema)
+	if err != nil {
+		result.Success = false
+		result.Issues = append(result.Issues, linters.Issue{
+			File:     filePath,
+			Line:     1,
+			Column:   1,
+			Severity: "error",
+			Message:  fmt.Sprintf("Failed to load JSON schema: %v", err),
+			Rule:     "schema",
+		})
+		return nil
+	}
+
+	if err := schema.Validate(data); err != nil {
+		result.Success = false
+		result.Issues = append(result.Issues, linters.Issue{
+			File:     filePath,
+			Line:     1,
+			Column:   1,
+			Severity: "error",
+			Message:  fmt.Sprintf("JSON schema validation failed: %v", err),
+			Rule:     "schema",
+		})
+	}
 
 	return nil
 }
