@@ -94,14 +94,25 @@ func runInit(globalOnly, projectOnly, dryRun, force bool, matcher string) error 
 
 	// Track if any changes were made
 	changesMade := false
+	applyToAll := false
 
 	// Process each settings file
-	for _, settingsPath := range settingsPaths {
+	for i, settingsPath := range settingsPaths {
 		fmt.Printf("Processing: %s\n", settingsPath)
-		wasModified, err := processSettingsFile(settingsPath, matcher, dryRun, force)
+
+		// If user selected "apply to all" on previous file, set force flag
+		forceThis := force || applyToAll
+
+		wasModified, err := processSettingsFile(settingsPath, matcher, dryRun, forceThis)
 		if err != nil {
 			return fmt.Errorf("failed to process %s: %w", settingsPath, err)
 		}
+
+		// Check if user selected "apply to all"
+		if wasModified && !force && i == 0 && len(settingsPaths) > 1 {
+			applyToAll = true
+		}
+
 		if wasModified {
 			changesMade = true
 		}
@@ -118,6 +129,25 @@ func runInit(globalOnly, projectOnly, dryRun, force bool, matcher string) error 
 
 // processSettingsFile handles a single settings file
 func processSettingsFile(settingsPath, matcher string, dryRun, force bool) (bool, error) {
+	// ANSI color codes
+	const (
+		red    = "\033[31m"
+		green  = "\033[32m"
+		yellow = "\033[33m"
+		bold   = "\033[1m"
+		reset  = "\033[0m"
+	)
+
+	// Determine if this is global or project settings
+	homeDir, _ := os.UserHomeDir()
+	isGlobal := strings.HasPrefix(settingsPath, homeDir)
+	settingsType := "PROJECT"
+	settingsDesc := "current project only"
+	if isGlobal {
+		settingsType = "GLOBAL"
+		settingsDesc = "all Claude Code projects"
+	}
+
 	// Read existing settings
 	settings, extraFields, err := readClaudeSettings(settingsPath)
 	if err != nil && !os.IsNotExist(err) {
@@ -138,11 +168,12 @@ func processSettingsFile(settingsPath, matcher string, dryRun, force bool) (bool
 
 	// Check if anything changed
 	if string(originalJSON) == string(modifiedJSON) {
-		fmt.Println("✓ CCFeedback hook is already configured correctly")
+		fmt.Printf("%s✓ CCFeedback hook is already configured correctly%s\n", green, reset)
 		return false, nil
 	}
 
-	// Display changes
+	// Display changes with clear indication of scope
+	fmt.Printf("\n%s%s%s SETTINGS%s - affects %s%s%s\n", bold, red, settingsType, reset, bold, settingsDesc, reset)
 	fmt.Println("\nProposed changes:")
 	displayChanges(originalJSON, modifiedJSON)
 
@@ -153,22 +184,44 @@ func processSettingsFile(settingsPath, matcher string, dryRun, force bool) (bool
 
 	// Ask for confirmation unless forced
 	if !force {
-		fmt.Print("\nApply these changes? [y/N]: ")
+		fmt.Printf("\n%sApply these changes to %s settings?%s [y/N/a]: ", bold, strings.ToLower(settingsType), reset)
+		fmt.Printf("\n  %sy%s = yes, apply to %s", green, reset, strings.ToLower(settingsType))
+		fmt.Printf("\n  %sn%s = no, skip %s", yellow, reset, strings.ToLower(settingsType))
+		fmt.Printf("\n  %sa%s = yes, apply to ALL (both global and project)\n> ", green, reset)
+
 		reader := bufio.NewReader(os.Stdin)
 		response, _ := reader.ReadString('\n')
 		response = strings.ToLower(strings.TrimSpace(response))
 
-		if response != "y" && response != "yes" {
-			fmt.Println("Canceled - no changes made")
+		switch response {
+		case "y", "yes":
+			// Continue with just this file
+		case "a", "all":
+			// Apply to this file and signal to apply to all remaining files
+			if err := applySettingsChanges(settingsPath, modifiedJSON); err != nil {
+				return false, err
+			}
+			return true, nil
+		default:
+			fmt.Println("Skipped - no changes made")
 			return false, nil
 		}
 	}
 
+	// Apply the changes
+	if err := applySettingsChanges(settingsPath, modifiedJSON); err != nil {
+		return false, err
+	}
+	return false, nil
+}
+
+// applySettingsChanges applies the settings changes to the file
+func applySettingsChanges(settingsPath string, modifiedJSON []byte) error {
 	// Backup existing file if it exists
 	if _, err := os.Stat(settingsPath); err == nil {
 		backupPath := fmt.Sprintf("%s.backup-%s", settingsPath, time.Now().Format("20060102-150405"))
 		if err := copyFile(settingsPath, backupPath); err != nil {
-			return false, fmt.Errorf("failed to backup existing settings: %w", err)
+			return fmt.Errorf("failed to backup existing settings: %w", err)
 		}
 		fmt.Printf("✓ Created backup: %s\n", backupPath)
 	}
@@ -176,16 +229,16 @@ func processSettingsFile(settingsPath, matcher string, dryRun, force bool) (bool
 	// Ensure directory exists
 	dir := filepath.Dir(settingsPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return false, fmt.Errorf("failed to create directory: %w", err)
+		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
 	// Write the new settings
 	if err := os.WriteFile(settingsPath, modifiedJSON, 0600); err != nil {
-		return false, fmt.Errorf("failed to write settings: %w", err)
+		return fmt.Errorf("failed to write settings: %w", err)
 	}
 
 	fmt.Printf("✓ Updated: %s\n", settingsPath)
-	return true, nil
+	return nil
 }
 
 // readClaudeSettings reads and parses Claude settings.json
