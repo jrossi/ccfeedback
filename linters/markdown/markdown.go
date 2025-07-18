@@ -5,11 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/jrossi/gismo/linters"
-	"github.com/santhosh-tekuri/jsonschema/v5"
+	"github.com/kaptinlin/jsonschema"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -270,10 +272,93 @@ type FrontMatter struct {
 	Metadata    map[string]string `yaml:",inline" json:"-"`
 }
 
+// loadSchema loads and compiles a JSON schema from either inline JSON or file path
+func (l *MarkdownLinter) loadSchema(schemaData *json.RawMessage) (*jsonschema.Schema, error) {
+	if schemaData == nil {
+		return nil, fmt.Errorf("schema data is nil")
+	}
+
+	compiler := jsonschema.NewCompiler()
+
+	// Try to detect if this is a file path (string) or inline schema (object)
+	var schemaPath string
+	if err := json.Unmarshal(*schemaData, &schemaPath); err == nil {
+		// It's a string, treat as file path
+		if !filepath.IsAbs(schemaPath) {
+			// Make relative paths relative to current working directory
+			wd, err := os.Getwd()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get working directory: %w", err)
+			}
+			schemaPath = filepath.Join(wd, schemaPath)
+		}
+
+		// Load schema from file
+		schemaBytes, err := os.ReadFile(schemaPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read schema file %s: %w", schemaPath, err)
+		}
+
+		return compiler.Compile(schemaBytes)
+	}
+
+	// Not a string, treat as inline schema object
+	return compiler.Compile([]byte(*schemaData))
+}
+
 // validateFrontMatter validates front matter against JSON schemas
 func (l *MarkdownLinter) validateFrontMatter(format string, data *FrontMatter) []linters.Issue {
-	// For now, just validate that front matter is well-formed
-	// TODO: Add JSON schema validation when schemas are configured
+	if l.config == nil || l.config.FrontmatterSchema == nil {
+		return []linters.Issue{}
+	}
+
+	schema, err := l.loadSchema(l.config.FrontmatterSchema)
+	if err != nil {
+		return []linters.Issue{{
+			File:     "",
+			Line:     1,
+			Column:   1,
+			Severity: "error",
+			Message:  fmt.Sprintf("Failed to load frontmatter schema: %v", err),
+			Rule:     "frontmatter-schema",
+		}}
+	}
+
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		return []linters.Issue{{
+			File:     "",
+			Line:     1,
+			Column:   1,
+			Severity: "error",
+			Message:  fmt.Sprintf("Failed to marshal frontmatter data: %v", err),
+			Rule:     "frontmatter-schema",
+		}}
+	}
+
+	var frontmatterData map[string]interface{}
+	if err := json.Unmarshal(dataJSON, &frontmatterData); err != nil {
+		return []linters.Issue{{
+			File:     "",
+			Line:     1,
+			Column:   1,
+			Severity: "error",
+			Message:  fmt.Sprintf("Failed to unmarshal frontmatter data: %v", err),
+			Rule:     "frontmatter-schema",
+		}}
+	}
+
+	if err := schema.Validate(frontmatterData); err != nil {
+		return []linters.Issue{{
+			File:     "",
+			Line:     1,
+			Column:   1,
+			Severity: "error",
+			Message:  fmt.Sprintf("Frontmatter validation failed: %v", err),
+			Rule:     "frontmatter-schema",
+		}}
+	}
+
 	return []linters.Issue{}
 }
 
