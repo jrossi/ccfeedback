@@ -1,7 +1,7 @@
 {
-  "name": "ccfeedback-docs",
+  "name": "gismo-docs",
   "version": "1.0.0",
-  "description": "CCFeedback documentation site",
+  "description": "Gismo documentation site",
   "scripts": {
     "build": "hugo --gc --minify",
     "serve": "hugo server",

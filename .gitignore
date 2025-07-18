@@ -1,5 +1,7 @@
 # Binaries
-ccfeedback
+gismo
+gismo-init
+gismo-show
 *.exe
 *.dll
 *.so

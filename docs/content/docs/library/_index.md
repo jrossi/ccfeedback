@@ -430,14 +430,14 @@ func main() {
 
     var api *gismo.API
     if *configFile != "" {
-        config, err := ccfeedback.LoadConfig(*configFile)
+        config, err := gismo.LoadConfig(*configFile)
         if err != nil {
             fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
             os.Exit(1)
         }
-        api = ccfeedback.NewAPIWithConfig(config)
+        api = gismo.NewAPIWithConfig(config)
     } else {
-        api = ccfeedback.NewAPI()
+        api = gismo.NewAPI()
     }
 
     var result *gismo.Result
