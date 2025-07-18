@@ -57,6 +57,11 @@ func main() {
 
 	flag.Parse()
 
+	// Set default matcher if not specified
+	if *matcher == "" {
+		*matcher = "Write|Edit|MultiEdit"
+	}
+
 	// Run init command
 	if err := runInit(*globalOnly, *projectOnly, *dryRun, *force, *matcher); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
