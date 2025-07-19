@@ -3,6 +3,7 @@ package json
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/jrossi/gismo/linters"
@@ -437,4 +438,186 @@ func TestJSONLinter_InterfaceCompliance(t *testing.T) {
 	// Test that it implements the required interfaces
 	var _ linters.Linter = linter
 	var _ linters.BatchingLinter = linter
+}
+
+func TestJSONLinter_SchemaValidation(t *testing.T) {
+	tests := []struct {
+		name         string
+		content      string
+		schema       string
+		expectError  bool
+		expectedRule string
+	}{
+		{
+			name: "valid_inline_schema",
+			content: `{
+				"name": "John Doe",
+				"age": 30,
+				"email": "john@example.com"
+			}`,
+			schema: `{
+				"type": "object",
+				"properties": {
+					"name": {"type": "string"},
+					"age": {"type": "number"},
+					"email": {"type": "string", "format": "email"}
+				},
+				"required": ["name", "age"]
+			}`,
+			expectError: false,
+		},
+		{
+			name: "invalid_json_missing_required",
+			content: `{
+				"name": "John Doe",
+				"email": "john@example.com"
+			}`,
+			schema: `{
+				"type": "object",
+				"properties": {
+					"name": {"type": "string"},
+					"age": {"type": "number"},
+					"email": {"type": "string"}
+				},
+				"required": ["name", "age"]
+			}`,
+			expectError:  true,
+			expectedRule: "schema",
+		},
+		{
+			name: "invalid_json_wrong_type",
+			content: `{
+				"name": "John Doe",
+				"age": "thirty",
+				"email": "john@example.com"
+			}`,
+			schema: `{
+				"type": "object",
+				"properties": {
+					"name": {"type": "string"},
+					"age": {"type": "number"},
+					"email": {"type": "string"}
+				},
+				"required": ["name", "age"]
+			}`,
+			expectError:  true,
+			expectedRule: "schema",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create config with inline schema
+			schemaJSON := json.RawMessage(tt.schema)
+			validationLevel := ValidationSchema
+			config := &JSONConfig{
+				ValidationLevel: &validationLevel,
+				JSONSchema:      &schemaJSON,
+			}
+
+			linter := NewJSONLinterWithConfig(config)
+			result, err := linter.Lint(context.Background(), "test.json", []byte(tt.content))
+			if err != nil {
+				t.Fatalf("Lint() error = %v", err)
+			}
+
+			hasSchemaError := false
+			for _, issue := range result.Issues {
+				if issue.Rule == tt.expectedRule && issue.Severity == "error" {
+					hasSchemaError = true
+					break
+				}
+			}
+
+			if tt.expectError && !hasSchemaError {
+				t.Errorf("Expected schema validation error, but got none. Issues: %+v", result.Issues)
+			}
+			if !tt.expectError && hasSchemaError {
+				t.Errorf("Expected no schema validation error, but got one")
+			}
+		})
+	}
+}
+
+func TestJSONLinter_SchemaFile(t *testing.T) {
+	// Create a temporary schema file
+	schemaContent := `{
+		"type": "object",
+		"properties": {
+			"id": {"type": "integer"},
+			"name": {"type": "string"},
+			"active": {"type": "boolean"}
+		},
+		"required": ["id", "name"]
+	}`
+
+	tmpFile, err := os.CreateTemp("", "schema-*.json")
+	if err != nil {
+		t.Fatalf("Failed to create temp schema file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(schemaContent); err != nil {
+		t.Fatalf("Failed to write schema file: %v", err)
+	}
+	tmpFile.Close()
+
+	tests := []struct {
+		name         string
+		content      string
+		expectError  bool
+		expectedRule string
+	}{
+		{
+			name: "valid_json_with_file_schema",
+			content: `{
+				"id": 123,
+				"name": "Test Item",
+				"active": true
+			}`,
+			expectError: false,
+		},
+		{
+			name: "invalid_json_missing_required",
+			content: `{
+				"id": 123,
+				"active": true
+			}`,
+			expectError:  true,
+			expectedRule: "schema",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create config with file path
+			schemaPath := json.RawMessage(`"` + tmpFile.Name() + `"`)
+			validationLevel := ValidationSchema
+			config := &JSONConfig{
+				ValidationLevel: &validationLevel,
+				JSONSchema:      &schemaPath,
+			}
+
+			linter := NewJSONLinterWithConfig(config)
+			result, err := linter.Lint(context.Background(), "test.json", []byte(tt.content))
+			if err != nil {
+				t.Fatalf("Lint() error = %v", err)
+			}
+
+			hasSchemaError := false
+			for _, issue := range result.Issues {
+				if issue.Rule == tt.expectedRule && issue.Severity == "error" {
+					hasSchemaError = true
+					break
+				}
+			}
+
+			if tt.expectError && !hasSchemaError {
+				t.Errorf("Expected schema validation error, but got none. Issues: %+v", result.Issues)
+			}
+			if !tt.expectError && hasSchemaError {
+				t.Errorf("Expected no schema validation error, but got one")
+			}
+		})
+	}
 }

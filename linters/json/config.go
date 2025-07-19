@@ -31,8 +31,8 @@ type JSONConfig struct {
 	// ValidationLevel sets the validation strictness level
 	ValidationLevel *ValidationLevel `json:"validationLevel,omitempty"`
 
-	// SchemaFile path to JSON schema file for validation
-	SchemaFile *string `json:"schemaFile,omitempty"`
+	// JSONSchema allows both file paths (string) and inline schemas (object)
+	JSONSchema *json.RawMessage `json:"jsonSchema,omitempty"`
 
 	// FormatDetection enables auto-detection of JSON vs JSON-L
 	FormatDetection *bool `json:"formatDetection,omitempty"`

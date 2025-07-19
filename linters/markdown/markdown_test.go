@@ -2,6 +2,8 @@ package markdown
 
 import (
 	"context"
+	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 )
@@ -583,5 +585,197 @@ Content here.`
 				t.Logf("Error in front matter document: %s (%s)", issue.Message, issue.Rule)
 			}
 		}
+	}
+}
+
+func TestMarkdownLinter_FrontMatterSchemaValidation(t *testing.T) {
+	tests := []struct {
+		name         string
+		content      string
+		schema       string
+		expectError  bool
+		expectedRule string
+	}{
+		{
+			name: "valid_inline_schema",
+			content: `---
+title: "Test Document"
+date: "2023-01-01"
+tags: ["test", "markdown"]
+---
+
+# Test Document`,
+			schema: `{
+				"type": "object",
+				"properties": {
+					"title": {"type": "string"},
+					"date": {"type": "string"},
+					"tags": {"type": "array", "items": {"type": "string"}}
+				},
+				"required": ["title", "date"]
+			}`,
+			expectError: false,
+		},
+		{
+			name: "invalid_frontmatter_missing_required",
+			content: `---
+title: "Test Document"
+tags: ["test"]
+---
+
+# Test Document`,
+			schema: `{
+				"type": "object",
+				"properties": {
+					"title": {"type": "string"},
+					"date": {"type": "string"},
+					"tags": {"type": "array", "items": {"type": "string"}}
+				},
+				"required": ["title", "date"]
+			}`,
+			expectError:  true,
+			expectedRule: "frontmatter-schema",
+		},
+		{
+			name: "invalid_frontmatter_wrong_type",
+			content: `---
+title: "Test Document"
+date: 2023
+tags: ["test"]
+---
+
+# Test Document`,
+			schema: `{
+				"type": "object",
+				"properties": {
+					"title": {"type": "string"},
+					"date": {"type": "string"},
+					"tags": {"type": "array", "items": {"type": "string"}}
+				},
+				"required": ["title", "date"]
+			}`,
+			expectError:  true,
+			expectedRule: "frontmatter-schema",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create config with inline schema
+			schemaJSON := json.RawMessage(tt.schema)
+			config := &MarkdownConfig{
+				RequireFrontmatter: &[]bool{true}[0],
+				FrontmatterSchema:  &schemaJSON,
+			}
+
+			linter := NewMarkdownLinterWithConfig(config)
+			result, err := linter.Lint(context.Background(), "test.md", []byte(tt.content))
+			if err != nil {
+				t.Fatalf("Lint() error = %v", err)
+			}
+
+			hasSchemaError := false
+			for _, issue := range result.Issues {
+				if issue.Rule == tt.expectedRule && issue.Severity == "error" {
+					hasSchemaError = true
+					break
+				}
+			}
+
+			if tt.expectError && !hasSchemaError {
+				t.Errorf("Expected schema validation error, but got none. Issues: %+v", result.Issues)
+			}
+			if !tt.expectError && hasSchemaError {
+				t.Errorf("Expected no schema validation error, but got one")
+			}
+		})
+	}
+}
+
+func TestMarkdownLinter_FrontMatterSchemaFile(t *testing.T) {
+	// Create a temporary schema file
+	schemaContent := `{
+		"type": "object",
+		"properties": {
+			"title": {"type": "string"},
+			"date": {"type": "string", "format": "date"},
+			"author": {"type": "string"},
+			"tags": {"type": "array", "items": {"type": "string"}}
+		},
+		"required": ["title", "author"]
+	}`
+
+	tmpFile, err := os.CreateTemp("", "schema-*.json")
+	if err != nil {
+		t.Fatalf("Failed to create temp schema file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(schemaContent); err != nil {
+		t.Fatalf("Failed to write schema file: %v", err)
+	}
+	tmpFile.Close()
+
+	tests := []struct {
+		name         string
+		content      string
+		expectError  bool
+		expectedRule string
+	}{
+		{
+			name: "valid_frontmatter_with_file_schema",
+			content: `---
+title: "Test Document"
+author: "John Doe"
+date: "2023-01-01"
+tags: ["test", "markdown"]
+---
+
+# Test Document`,
+			expectError: false,
+		},
+		{
+			name: "invalid_frontmatter_missing_author",
+			content: `---
+title: "Test Document"
+date: "2023-01-01"
+---
+
+# Test Document`,
+			expectError:  true,
+			expectedRule: "frontmatter-schema",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create config with file path
+			schemaPath := json.RawMessage(`"` + tmpFile.Name() + `"`)
+			config := &MarkdownConfig{
+				RequireFrontmatter: &[]bool{true}[0],
+				FrontmatterSchema:  &schemaPath,
+			}
+
+			linter := NewMarkdownLinterWithConfig(config)
+			result, err := linter.Lint(context.Background(), "test.md", []byte(tt.content))
+			if err != nil {
+				t.Fatalf("Lint() error = %v", err)
+			}
+
+			hasSchemaError := false
+			for _, issue := range result.Issues {
+				if issue.Rule == tt.expectedRule && issue.Severity == "error" {
+					hasSchemaError = true
+					break
+				}
+			}
+
+			if tt.expectError && !hasSchemaError {
+				t.Errorf("Expected schema validation error, but got none. Issues: %+v", result.Issues)
+			}
+			if !tt.expectError && hasSchemaError {
+				t.Errorf("Expected no schema validation error, but got one")
+			}
+		})
 	}
 }
